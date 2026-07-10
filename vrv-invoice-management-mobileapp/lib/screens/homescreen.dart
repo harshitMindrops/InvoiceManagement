@@ -304,106 +304,487 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
+      barrierColor: const Color(0xFF0B0F26).withOpacity(0.55),
       builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Row(
-              children: [
-                Icon(Icons.logout_rounded, color: Color(0xFF192155)),
-                SizedBox(width: 8),
-                Text('Confirm Logout'),
-              ],
-            ),
-            content: const Text('Are you sure you want to logout?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF192155).withOpacity(0.25),
+                    blurRadius: 30,
+                    offset: const Offset(0, 16),
                   ),
-                ),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
+                ],
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _logout(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF192155),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF2A3577),
+                          Color(0xFF141B44),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF141B44).withOpacity(0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF192155),
+                      letterSpacing: 0.1,
+                    ),
                   ),
-                ),
-                child: const Text('Logout'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'You will need to sign in again to access your invoices and account.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.4,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Material(
+                          color: const Color(0xFFF3F4F7),
+                          borderRadius: BorderRadius.circular(14),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 13,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF2A3577),
+                                  Color(0xFF141B44)
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFF141B44).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () {
+                                Navigator.pop(context);
+                                _logout(context);
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 13),
+                                child: Text(
+                                  'Log Out',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
     );
+  }
+
+  Color _getCategoryAccentColor(String? categoryName) {
+    final String name = (categoryName ?? 'Uncategorized').toLowerCase();
+    if (name == 'all') return const Color(0xFF192155);
+    const List<Color> palette = [
+      Color(0xFF7C5CFA), // purple
+      Color(0xFF3CBD6B), // green
+      Color(0xFF1E88E5), // blue
+      Color(0xFFE8A33D), // amber
+      Color(0xFFE0577B), // pink
+      Color(0xFF19A7A0), // teal
+      Color(0xFF6C63FF), // indigo
+      Color(0xFFEF6C4D), // orange
+    ];
+    final int hash = name.codeUnits.fold(0, (sum, code) => sum + code);
+    return palette[hash % palette.length];
+  }
+
+  IconData _getCategoryIcon(String? categoryName) {
+    switch ((categoryName ?? '').toLowerCase()) {
+      case 'all':
+        return Icons.apps_rounded;
+      case 'capex':
+        return Icons.account_balance_rounded;
+      case 'chemical':
+        return Icons.science_rounded;
+      case 'document':
+        return Icons.description_rounded;
+      case 'fuel':
+        return Icons.local_gas_station_rounded;
+      case 'grain':
+        return Icons.grass_rounded;
+      case 'invoices':
+        return Icons.receipt_long_rounded;
+      case 'others':
+        return Icons.more_horiz_rounded;
+      case 'services':
+        return Icons.handyman_rounded;
+      case 'store and spares':
+        return Icons.inventory_2_rounded;
+      default:
+        return Icons.category_rounded;
+    }
   }
 
   void _showCategoriesFilterDialog() {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      barrierColor: Colors.black.withOpacity(0.45),
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 40,
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.72,
+              maxWidth: 420,
             ),
-            title: const Row(
-              children: [
-                Icon(Icons.category_rounded, color: Color(0xFF192155)),
-                SizedBox(width: 8),
-                Text('Select Category'),
-              ],
-            ),
-            content: SingleChildScrollView(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 32,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                children:
-                    _categories.map((category) {
-                      return RadioListTile<Map<String, dynamic>>(
-                        title: Text(category['name']),
-                        value: category,
-                        groupValue: _selectedCategory,
-                        activeColor: Color(0xFF192155),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCategory = value;
-                            _fetchInvoices(
-                              search:
-                                  _searchQuery.isNotEmpty ? _searchQuery : null,
-                              categoryId: value?['id']?.toString(),
-                            );
-                          });
-                          Navigator.pop(context);
-                        },
-                      );
-                    }).toList(),
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 14, 14),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(9),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF192155).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.category_rounded,
+                            color: Color(0xFF192155),
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Select Category',
+                                style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF192155),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${_categories.length} categories available',
+                                style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: Colors.grey.shade500,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Material(
+                          color: Colors.grey.shade100,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () => Navigator.pop(context),
+                            child: Padding(
+                              padding: const EdgeInsets.all(7),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 18,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1, color: Colors.grey.shade200),
+
+                  // Category list
+                  Flexible(
+                    child:
+                        _categories.isEmpty
+                            ? Padding(
+                              padding: const EdgeInsets.all(36),
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: const Color(0xFF192155),
+                                  strokeWidth: 2.4,
+                                ),
+                              ),
+                            )
+                            : ListView.separated(
+                              shrinkWrap: true,
+                              padding: const EdgeInsets.fromLTRB(
+                                12,
+                                10,
+                                12,
+                                10,
+                              ),
+                              itemCount: _categories.length,
+                              separatorBuilder:
+                                  (_, __) => const SizedBox(height: 3),
+                              itemBuilder: (context, index) {
+                                final category = _categories[index];
+                                final bool isSelected =
+                                    _selectedCategory?['id'] ==
+                                    category['id'];
+                                final Color accent = _getCategoryAccentColor(
+                                  category['name'],
+                                );
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCategory = category;
+                                        _fetchInvoices(
+                                          search:
+                                              _searchQuery.isNotEmpty
+                                                  ? _searchQuery
+                                                  : null,
+                                          categoryId:
+                                              category['id']?.toString(),
+                                        );
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 150,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 9,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isSelected
+                                                ? const Color(
+                                                  0xFF192155,
+                                                ).withOpacity(0.06)
+                                                : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(
+                                          14,
+                                        ),
+                                        border: Border.all(
+                                          color:
+                                              isSelected
+                                                  ? const Color(
+                                                    0xFF192155,
+                                                  ).withOpacity(0.22)
+                                                  : Colors.transparent,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 32,
+                                            height: 32,
+                                            decoration: BoxDecoration(
+                                              color: accent.withOpacity(0.14),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Icon(
+                                              _getCategoryIcon(
+                                                category['name'],
+                                              ),
+                                              size: 16,
+                                              color: accent,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              category['name'] ?? '',
+                                              style: TextStyle(
+                                                fontSize: 14.5,
+                                                fontWeight:
+                                                    isSelected
+                                                        ? FontWeight.w700
+                                                        : FontWeight.w500,
+                                                color:
+                                                    isSelected
+                                                        ? const Color(
+                                                          0xFF192155,
+                                                        )
+                                                        : Colors
+                                                            .grey
+                                                            .shade800,
+                                              ),
+                                            ),
+                                          ),
+                                          AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 150,
+                                            ),
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color:
+                                                  isSelected
+                                                      ? const Color(
+                                                        0xFF192155,
+                                                      )
+                                                      : Colors.transparent,
+                                              border: Border.all(
+                                                color:
+                                                    isSelected
+                                                        ? const Color(
+                                                          0xFF192155,
+                                                        )
+                                                        : Colors
+                                                            .grey
+                                                            .shade300,
+                                                width: 1.6,
+                                              ),
+                                            ),
+                                            child:
+                                                isSelected
+                                                    ? const Icon(
+                                                      Icons.check_rounded,
+                                                      size: 13,
+                                                      color: Colors.white,
+                                                    )
+                                                    : null,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                  ),
+                  Divider(height: 1, color: Colors.grey.shade200),
+
+                  // Footer
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
-              ),
-            ],
           ),
+        );
+      },
     );
   }
 
@@ -600,8 +981,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
             removeBottom: true,
             context: context,
             child: Dialog(
+              backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
               ),
               insetPadding: const EdgeInsets.symmetric(
                 horizontal: 24,
@@ -612,48 +994,94 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                 height: MediaQuery.of(context).size.height * 0.85,
                 child: Stack(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
-                      child: Column(
-                        children: [
-                          // Title
-                          Row(
-                            children: const [
-                              Icon(
-                                Icons.check_circle,
-                                color: Color(0xFF192155),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // ── Header ────────────────────────────
+                        Container(
+                          padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFFF3F4FB), Colors.white],
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFF192155),
+                                      Color(0xFF2E3A78),
+                                    ],
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
                               ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Review AI Extracted Data',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Review AI Extracted Data',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 17.5,
+                                        color: Color(0xFF192155),
+                                        letterSpacing: -0.2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Please confirm the details before saving',
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          const Divider(height: 1, color: Colors.grey),
-                          const SizedBox(height: 8),
+                        ),
+                        Container(height: 1, color: const Color(0xFFE3E5EE)),
 
                           // Form (scrollable if really needed)
                           Expanded(
                             child: Form(
                               key: _formKey,
                               child: SingleChildScrollView(
-                                padding: EdgeInsets.only(
-                                  left: 4,
-                                  right: 4,
-                                  bottom:
-                                      MediaQuery.of(context)
-                                          .viewInsets
-                                          .bottom, // Adjust for keyboard
+                                padding: EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  16 + MediaQuery.of(context).viewInsets.bottom,
                                 ),
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    _sectionLabel('Company Details'),
+                                    const SizedBox(height: 10),
                                     DropdownButtonFormField<String>(
                                       decoration: _inputDecoration(
                                         'Select Company',
+                                        icon: Icons.apartment_rounded,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Color(0xFF2E3A78),
                                       ),
                                       value:
                                           invoicedToController.text.isEmpty
@@ -677,11 +1105,16 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                   ? 'Please select a company'
                                                   : null,
                                     ),
-                                    const SizedBox(
-                                      height: 8,
-                                    ), // Reduced from 12
+                                    const SizedBox(height: 14),
                                     DropdownButtonFormField<String>(
-                                      decoration: _inputDecoration('Category'),
+                                      decoration: _inputDecoration(
+                                        'Category',
+                                        icon: Icons.category_rounded,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.keyboard_arrow_down_rounded,
+                                        color: Color(0xFF2E3A78),
+                                      ),
                                       value: selectedCategoryId,
                                       items:
                                           categories
@@ -705,21 +1138,21 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                   ? 'Please select a category'
                                                   : null,
                                     ),
-                                    const SizedBox(
-                                      height: 8,
-                                    ), // Reduced from 12
+                                    const SizedBox(height: 22),
+                                    _sectionLabel('Invoice Information'),
+                                    const SizedBox(height: 10),
                                     TextField(
                                       decoration: _inputDecoration(
                                         'Invoice Number',
+                                        icon: Icons.confirmation_number_outlined,
                                       ),
                                       controller: invoiceNumberController,
                                     ),
-                                    const SizedBox(
-                                      height: 8,
-                                    ), // Reduced from 12
+                                    const SizedBox(height: 14),
                                     TextFormField(
                                       decoration: _inputDecoration(
                                         'Company Name',
+                                        icon: Icons.business_rounded,
                                       ),
                                       controller: companyNameController,
                                       validator:
@@ -729,17 +1162,17 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                   ? 'Please enter a company name'
                                                   : null,
                                     ),
-                                    const SizedBox(
-                                      height: 8,
-                                    ), // Reduced from 12
+                                    const SizedBox(height: 14),
                                     TextFormField(
                                       decoration: _inputDecoration(
                                         'Invoice Date',
+                                        icon: Icons.event_rounded,
                                       ).copyWith(
                                         suffixIcon: IconButton(
                                           icon: const Icon(
                                             Icons.calendar_today,
                                             color: Color(0xFF192155),
+                                            size: 19,
                                           ),
                                           onPressed: () async {
                                             final picked = await showDatePicker(
@@ -760,22 +1193,26 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                       controller: invoiceDateController,
                                       readOnly: true,
                                     ),
-                                    const SizedBox(
-                                      height: 8,
-                                    ), // Reduced from 12
+                                    const SizedBox(height: 14),
                                     TextField(
-                                      decoration: _inputDecoration('Amount'),
+                                      decoration: _inputDecoration(
+                                        'Amount',
+                                        icon: Icons.currency_rupee_rounded,
+                                      ),
                                       controller: amountController,
                                       keyboardType:
                                           const TextInputType.numberWithOptions(
                                             decimal: true,
                                           ),
                                     ),
-                                    const SizedBox(
-                                      height: 8,
-                                    ), // Reduced from 12
+                                    const SizedBox(height: 22),
+                                    _sectionLabel('Additional Notes'),
+                                    const SizedBox(height: 10),
                                     TextFormField(
-                                      decoration: _inputDecoration('Remark'),
+                                      decoration: _inputDecoration(
+                                        'Remark',
+                                        icon: Icons.sticky_note_2_outlined,
+                                      ),
                                       controller: remarkController,
                                       validator:
                                           (value) =>
@@ -784,20 +1221,22 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                   ? 'Please enter a remark'
                                                   : null,
                                     ),
-                                    const SizedBox(
-                                      height: 16,
-                                    ), // Reduced from 20
+                                    const SizedBox(height: 8),
                                   ],
                                 ),
                               ),
                             ),
                           ),
 
+                        Container(height: 1, color: const Color(0xFFE3E5EE)),
+
                           // Buttons
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 14, 20, 18),
+                            child: Row(
                             children: [
-                              OutlinedButton(
+                              Expanded(
+                              child: OutlinedButton(
                                 onPressed: () async {
                                   final uploadedFileIds =
                                       confirmResponse.uploadedFiles
@@ -815,17 +1254,31 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                   });
                                 },
                                 style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFF6B7280),
+                                  side: const BorderSide(
+                                    color: Color(0xFFE3E5EE),
+                                    width: 1.4,
+                                  ),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
+                                    vertical: 14,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text('Cancel'),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14.5,
+                                  ),
+                                ),
                               ),
-                              ElevatedButton(
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                              flex: 2,
+                              child: ElevatedButton(
                                 onPressed: () async {
                                   if (!_formKey.currentState!.validate())
                                     return;
@@ -879,36 +1332,55 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF192155),
                                   foregroundColor: Colors.white,
+                                  elevation: 0,
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
+                                    vertical: 14,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text('Confirm'),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.check_rounded, size: 18),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Confirm',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 14.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               ),
                             ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
 
                     // Close button
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: 14,
+                      right: 14,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(20),
                         onTap: () => Navigator.pop(context),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color: Colors.grey[100],
                             shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFE3E5EE)),
                           ),
                           padding: const EdgeInsets.all(6),
-                          child: const Icon(Icons.close, size: 18),
+                          child: const Icon(
+                            Icons.close,
+                            size: 17,
+                            color: Color(0xFF6B7280),
+                          ),
                         ),
                       ),
                     ),
@@ -1008,65 +1480,57 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
   }
 
   /// Helper for consistent form field styling
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(String label, {IconData? icon}) {
+    const navy = Color(0xFF192155);
+    const navySoft = Color(0xFF2E3A78);
+    const border = Color(0xFFE3E5EE);
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      labelStyle: const TextStyle(
+        color: Color(0xFF6B7280),
+        fontWeight: FontWeight.w600,
+        fontSize: 13.5,
+      ),
+      floatingLabelStyle: const TextStyle(
+        color: navy,
+        fontWeight: FontWeight.w700,
+        fontSize: 13,
+      ),
+      prefixIcon: icon != null ? Icon(icon, size: 19, color: navySoft) : null,
       filled: true,
-      fillColor: Colors.grey.shade100,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      fillColor: const Color(0xFFF7F8FC),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: border),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: navy, width: 1.6),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFDC2626)),
+      ),
     );
   }
 
-  // Future<void> _showAIProcessingDialog(BuildContext context) async {
-  //   bool isFilesUploaded = true;
-  //   bool isDataExtracted = false;
-  //   bool isValidated = false;
-  //   bool isPreparing = false;
-  //
-  //   await showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder:
-  //         (context) => StatefulBuilder(
-  //           builder: (context, setState) {
-  //             String message = 'Uploading files...';
-  //             if (isFilesUploaded && !isDataExtracted) {
-  //               Future.delayed(const Duration(seconds: 3), () {
-  //                 if (mounted) {
-  //                   setState(() {
-  //                     isDataExtracted = true;
-  //                     message = 'Extracting data with AI...';
-  //                   });
-  //                 }
-  //               });
-  //             }
-  //             if (isDataExtracted && !isValidated) {
-  //               Future.delayed(const Duration(seconds: 4), () {
-  //                 if (mounted) {
-  //                   setState(() {
-  //                     isValidated = true;
-  //                     message = 'Validating data...';
-  //                   });
-  //                 }
-  //               });
-  //             }
-  //             if (isValidated && !isPreparing) {
-  //               Future.delayed(const Duration(seconds: 4), () {
-  //                 if (mounted) {
-  //                   setState(() {
-  //                     isPreparing = true;
-  //                     message = 'Preparing invoice data...';
-  //                   });
-  //                 }
-  //               });
-  //             }
-  //
-  //             return InvoiceCard();
-  //           },
-  //         ),
-  //   );
-  // }
+  /// Small uppercase section header used inside the review dialog
+  Widget _sectionLabel(String text) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11.5,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.8,
+        color: Color(0xFF2E3A78),
+      ),
+    );
+  }
 
   void _showUploadOptions(BuildContext context) {
     final parentContext = context;
@@ -1082,7 +1546,8 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                const Color(0xFF192155).withOpacity(0.035),
+                // const Color(0xFF192155).withOpacity(0.5),
+                Colors.white,
                 Colors.white,
               ],
               stops: const [0.0, 0.35],
@@ -1112,13 +1577,13 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF192155),
+                      color: Color.fromARGB(255, 7, 13, 57),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Choose how you\'d like to add your invoice',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                    style: TextStyle(fontSize: 13, color: const Color.fromARGB(255, 54, 54, 54)),
                   ),
                   const SizedBox(height: 22),
                   Row(
@@ -1527,35 +1992,84 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24),
-                  topRight: Radius.circular(24),
+                  topLeft: Radius.circular(28),
+                  topRight: Radius.circular(28),
                 ),
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.fromLTRB(18, 12, 18, 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Header
+                      // Drag handle
                       Container(
-                        padding: const EdgeInsets.all(16.0),
+                        width: 42,
+                        height: 4,
                         decoration: BoxDecoration(
-                          color: Color(0xFFF5F5F5),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Upload Invoices',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF192155),
-                            ),
-                          ),
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            width: 46,
+                            height: 46,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF192155), Color(0xFF2A3577)],
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF192155,
+                                  ).withOpacity(0.3),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              selectedMode == "Photo"
+                                  ? Icons.camera_alt_rounded
+                                  : Icons.description_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Upload Invoices',
+                                  style: TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF192155),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Review your selection before submitting',
+                                  style: TextStyle(
+                                    fontSize: 12.5,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
 
                       // Compression UI - Show over existing content
                       if (isCompressing)
@@ -1563,29 +2077,47 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                           padding: const EdgeInsets.all(24.0),
                           margin: const EdgeInsets.symmetric(vertical: 16.0),
                           decoration: BoxDecoration(
-                            color: Color(0xFFF8F9FA),
-                            borderRadius: BorderRadius.circular(12.0),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                const Color(0xFF192155).withOpacity(0.06),
+                                Colors.white,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16.0),
                             border: Border.all(
-                              color: Color(0xFF192155).withOpacity(0.2),
+                              color: Color(0xFF192155).withOpacity(0.15),
                               width: 1,
                             ),
                           ),
                           child: Column(
                             children: [
+                              const SizedBox(
+                                width: 34,
+                                height: 34,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Color(0xFF192155),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
                               Text(
                                 'Compressing image...',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 15.5,
                                   color: Color(0xFF192155),
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 6),
                               Text(
                                 'Please wait while we optimize your file',
                                 style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                  color: Colors.grey.shade500,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -1598,22 +2130,47 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                         DottedBorder(
                           options: RoundedRectDottedBorderOptions(
                             dashPattern: [8, 4],
-                            strokeWidth: 1,
-                            radius: const Radius.circular(8.0),
-                            color: Colors.grey.shade400,
+                            strokeWidth: 1.4,
+                            radius: const Radius.circular(16.0),
+                            color: const Color(0xFF192155).withOpacity(0.35),
                             padding: const EdgeInsets.all(0),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 26.0,
+                              horizontal: 16.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF192155).withOpacity(0.03),
+                              borderRadius: BorderRadius.circular(16.0),
+                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF192155,
+                                    ).withOpacity(0.08),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.cloud_upload_outlined,
+                                    color: const Color(0xFF192155),
+                                    size: 26,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
                                 Text(
                                   'Supports 1 PDF/DOC/DOCX or up to 3 PNG/JPG (10MB each)',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 13.5,
                                     color: Colors.grey.shade600,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
@@ -1625,26 +2182,62 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
 
                       // Selected files count (hide during compression)
                       if (!isCompressing)
-                        Text(
-                          selectedMode == "Photo"
-                              ? 'Selected Photo (${tempSelectedImages.length}/3)'
-                              : 'Selected Files (${(tempSelectedFile != null ? 1 : 0) + tempSelectedImages.length}/1)',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF192155),
-                          ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.folder_copy_rounded,
+                              size: 17,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              selectedMode == "Photo"
+                                  ? 'Selected Photo'
+                                  : 'Selected Files',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF192155),
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFF192155,
+                                ).withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                selectedMode == "Photo"
+                                    ? '${tempSelectedImages.length}/3'
+                                    : '${(tempSelectedFile != null ? 1 : 0) + tempSelectedImages.length}/1',
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF192155),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 10),
 
                       // Files list or no files message (hide during compression)
                       if (!isCompressing && !hasSelected)
-                        const Padding(
-                          padding: EdgeInsets.all(16.0),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: Text(
                             'No files selected',
-                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade500,
+                            ),
                           ),
                         )
                       else if (!isCompressing && hasSelected)
@@ -1691,51 +2284,66 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                   'MB';
 
                               return Container(
-                                margin: const EdgeInsets.only(bottom: 8.0),
-                                padding: const EdgeInsets.all(12.0),
+                                margin: const EdgeInsets.only(bottom: 10.0),
+                                padding: const EdgeInsets.all(10.0),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFF5F5F5),
-                                  borderRadius: BorderRadius.circular(8.0),
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(14.0),
+                                  border: Border.all(
+                                    color: Colors.grey.shade100,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF192155,
+                                      ).withOpacity(0.06),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        if (isPdf)
-                                          const Icon(
-                                            Icons.picture_as_pdf,
-                                            color: Color(0xFF192155),
-                                            size: 20,
+                                        Container(
+                                          width: 38,
+                                          height: 38,
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF192155,
+                                            ).withOpacity(0.08),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           ),
-                                        if (isImage)
-                                          const Icon(
-                                            Icons.image,
-                                            color: Color(0xFF192155),
-                                            size: 20,
+                                          child: Icon(
+                                            isPdf
+                                                ? Icons.picture_as_pdf_rounded
+                                                : isImage
+                                                ? Icons.image_rounded
+                                                : Icons.insert_drive_file_rounded,
+                                            color: const Color(0xFF192155),
+                                            size: 19,
                                           ),
-                                        if (!isPdf && !isImage)
-                                          const Icon(
-                                            Icons.insert_drive_file,
-                                            color: Color(0xFF192155),
-                                            size: 20,
-                                          ),
-                                        const SizedBox(width: 8),
+                                        ),
+                                        const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
                                             trimmedFileName,
                                             style: const TextStyle(
                                               fontSize: 14,
-                                              fontWeight: FontWeight.w500,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF192155),
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         if (isImage || isPdf)
                                           IconButton(
-                                            icon: const Icon(
-                                              Icons.remove_red_eye,
-                                              color: Colors.blue,
+                                            icon: Icon(
+                                              Icons.remove_red_eye_rounded,
+                                              color: Colors.blue.shade600,
                                               size: 20,
                                             ),
                                             onPressed: () {
@@ -1948,9 +2556,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                             },
                                           ),
                                         IconButton(
-                                          icon: const Icon(
-                                            Icons.close,
-                                            color: Colors.red,
+                                          icon: Icon(
+                                            Icons.close_rounded,
+                                            color: Colors.red.shade400,
                                             size: 20,
                                           ),
                                           onPressed: () {
@@ -1982,14 +2590,27 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.only(
-                                        left: 32.0,
-                                        top: 4.0,
+                                        left: 48.0,
+                                        top: 6.0,
                                       ),
-                                      child: Text(
-                                        '($fileSize)',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          fileSize,
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade600,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2000,13 +2621,15 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                           ),
                         ),
 
+                      const SizedBox(height: 20),
+                      Divider(color: Colors.grey.shade200, height: 1),
                       const SizedBox(height: 16),
 
                       // Action buttons
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          ElevatedButton(
+                          Expanded(
+                            child: ElevatedButton.icon(
                             onPressed:
                                 hasSelected && !isCompressing
                                     ? () {
@@ -2024,20 +2647,38 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                               backgroundColor:
                                   hasSelected && !isCompressing
                                       ? Color(0xffFF9635)
-                                      : Colors.grey.shade400,
-                              foregroundColor: Colors.white,
+                                      : Colors.grey.shade200,
+                              foregroundColor:
+                                  hasSelected && !isCompressing
+                                      ? Colors.white
+                                      : Colors.grey.shade500,
+                              elevation: hasSelected && !isCompressing ? 2 : 0,
+                              shadowColor: const Color(
+                                0xffFF9635,
+                              ).withOpacity(0.4),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
-                              minimumSize: Size(100, 48),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 13,
                               ),
                             ),
-                            child: const Text('Reset'),
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              size: 17,
+                            ),
+                            label: const Text(
+                              'Reset',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5,
+                              ),
+                            ),
+                            ),
                           ),
-                          ElevatedButton(
+                          const SizedBox(width: 10),
+                          Expanded(
+                          child: ElevatedButton(
                             onPressed:
                                 isUploadEnabled &&
                                         tempSelectedImages.length < 3 &&
@@ -2306,27 +2947,48 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                           tempSelectedImages.length < 3 &&
                                           !isCompressing
                                       ? Color(0xFF4A90E2)
-                                      : Colors.grey.shade400,
-                              foregroundColor: Colors.white,
+                                      : Colors.grey.shade200,
+                              foregroundColor:
+                                  isUploadEnabled &&
+                                          tempSelectedImages.length < 3 &&
+                                          !isCompressing
+                                      ? Colors.white
+                                      : Colors.grey.shade500,
+                              elevation:
+                                  isUploadEnabled &&
+                                          tempSelectedImages.length < 3 &&
+                                          !isCompressing
+                                      ? 2
+                                      : 0,
+                              shadowColor: const Color(
+                                0xFF4A90E2,
+                              ).withOpacity(0.4),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
-                              minimumSize: Size(100, 48),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 13,
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: const [
-                                Icon(Icons.add, size: 18),
-                                SizedBox(width: 8),
-                                Text('Add'),
+                                Icon(Icons.add_rounded, size: 17),
+                                SizedBox(width: 6),
+                                Text(
+                                  'Add',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13.5,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          ElevatedButton(
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                          child: ElevatedButton(
                             onPressed:
                                 hasSelected && !_isUploading && !isCompressing
                                     ? () async {
@@ -2369,15 +3031,17 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                               backgroundColor:
                                   hasSelected && !isCompressing
                                       ? Color(0xFF192155)
-                                      : Colors.grey.shade400,
+                                      : Colors.grey.shade300,
                               foregroundColor: Colors.white,
+                              elevation: hasSelected && !isCompressing ? 3 : 0,
+                              shadowColor: const Color(
+                                0xFF192155,
+                              ).withOpacity(0.5),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
+                                borderRadius: BorderRadius.circular(12.0),
                               ),
-                              minimumSize: Size(100, 48),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 13,
                               ),
                             ),
                             child:
@@ -2393,15 +3057,25 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                     : Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: const [
-                                        Icon(Icons.send_outlined, size: 18),
-                                        SizedBox(width: 8),
-                                        Text('Submit'),
+                                        Icon(
+                                          Icons.send_rounded,
+                                          size: 17,
+                                        ),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'Submit',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13.5,
+                                          ),
+                                        ),
                                       ],
                                     ),
                           ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
@@ -2429,10 +3103,11 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [gradientColors.first.withOpacity(0.07), Colors.white],
+            // colors: [gradientColors.first.withOpacity(0.07), Colors.white],
+            colors: [gradientColors.first.withOpacity(0.07), gradientColors.last.withOpacity(0.07)]
           ),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.grey.shade100),
+          border: Border.all(color: Colors.white.withOpacity(0.3)),
           boxShadow: [
             BoxShadow(
               color: gradientColors.last.withOpacity(0.22),
@@ -2564,6 +3239,40 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
     return '$baseDomain$path';
   }
 
+  Map<String, dynamic> _fileTypeMeta(String extension) {
+    switch (extension.toLowerCase()) {
+      case 'pdf':
+        return {'icon': Icons.picture_as_pdf_rounded, 'color': const Color(0xFFD64545)};
+      case 'doc':
+      case 'docx':
+        return {'icon': Icons.description_rounded, 'color': const Color(0xFF1E88E5)};
+      case 'xls':
+      case 'xlsx':
+        return {'icon': Icons.grid_on_rounded, 'color': const Color(0xFF3CBD6B)};
+      default:
+        return {'icon': Icons.insert_drive_file_rounded, 'color': const Color(0xFF7C5CFA)};
+    }
+  }
+
+  Widget _previewAppBarAction({
+    required IconData icon,
+    required VoidCallback onPressed,
+    String? tooltip,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: Material(
+        color: Colors.white.withOpacity(0.14),
+        shape: const CircleBorder(),
+        child: IconButton(
+          tooltip: tooltip,
+          icon: Icon(icon, color: Colors.white, size: 20),
+          onPressed: onPressed,
+        ),
+      ),
+    );
+  }
+
   Future<void> _openInvoicesPreview(List<String> urls) async {
     Navigator.push(
       context,
@@ -2587,129 +3296,453 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                   .map(_buildFullUrl)
                   .toList();
 
-          // If only one non-image file, open directly
-          if (nonImageUrls.length == 1 && imageUrls.isEmpty) {
-            final url = nonImageUrls.first;
+          // If there is exactly one file overall (image or document), open
+          // it directly in the dedicated full-screen viewer so it fills the
+          // whole screen instead of sitting in a small card with empty space.
+          final int totalFilesCount = imageUrls.length + nonImageUrls.length;
+          if (totalFilesCount == 1) {
+            final url = imageUrls.isNotEmpty ? imageUrls.first : nonImageUrls.first;
             final extension = _getExtensionFromUrl(url);
             final fileName =
                 Uri.parse(url).pathSegments.isNotEmpty
                     ? Uri.parse(url).pathSegments.last
                     : url.split('/').last;
-            return Scaffold(
-              appBar: AppBar(
-                backgroundColor: const Color(0xFF192155),
-                foregroundColor: Colors.white,
-                title: const Text('Invoice Preview'),
-                actions: [
-                  IconButton(
-                    onPressed: () {
-                      _downloadInvoice(url, fileName);
-                    },
-                    icon: const Icon(Icons.download),
-                  ),
-                ],
-              ),
+            return _buildFileViewerScaffold(
+              title: 'Invoice Preview',
+              subtitle: fileName,
               body: _buildInvoiceContent(url, extension),
+              onDownload: () => _downloadInvoice(url, fileName),
             );
           }
 
           // If images or mixed files
+          final int totalFiles = imageUrls.length + nonImageUrls.length;
           return Scaffold(
-            appBar: AppBar(
-              backgroundColor: const Color(0xFF192155),
-              foregroundColor: Colors.white,
-              title: const Text('Invoices Preview'),
-              actions: [
-                if (imageUrls.isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.download),
-                    onPressed: () async {
-                      for (var imgUrl in imageUrls) {
-                        final imgFileName =
-                            Uri.parse(imgUrl).pathSegments.isNotEmpty
-                                ? Uri.parse(imgUrl).pathSegments.last
-                                : imgUrl.split('/').last;
-                        await _downloadInvoice(imgUrl, imgFileName);
-                      }
-                    },
+            backgroundColor: const Color(0xFFE9EBF3),
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(64),
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF2A3577), Color(0xFF141B44)],
                   ),
-              ],
-            ),
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (imageUrls.isNotEmpty) ...[
-                    for (var imgUrl in imageUrls)
-                      Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white, size: 18),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text(
+                                'Invoices Preview',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                '$totalFiles file${totalFiles == 1 ? '' : 's'} attached',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.6),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Image.network(
-                            imgUrl,
-                            fit: BoxFit.contain,
-                            errorBuilder:
-                                (context, error, stackTrace) => const Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: Center(
-                                    child: Text('Failed to load image'),
+                        ),
+                        if (imageUrls.isNotEmpty)
+                          _previewAppBarAction(
+                            icon: Icons.download_rounded,
+                            tooltip: 'Download all images',
+                            onPressed: () async {
+                              for (var imgUrl in imageUrls) {
+                                final imgFileName =
+                                    Uri.parse(imgUrl).pathSegments.isNotEmpty
+                                        ? Uri.parse(imgUrl).pathSegments.last
+                                        : imgUrl.split('/').last;
+                                await _downloadInvoice(imgUrl, imgFileName);
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            body: ListView(
+              padding: const EdgeInsets.fromLTRB(14, 16, 14, 20),
+              children: [
+                if (imageUrls.isNotEmpty) ...[
+                  Text(
+                    'IMAGES',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (var imgUrl in imageUrls)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF192155).withOpacity(0.08),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => _openFullScreenImage(context, imgUrl),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(18),
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 340,
+                                  color: const Color(0xFFF3F4F7),
+                                  child: Image.network(
+                                    imgUrl,
+                                    width: double.infinity,
+                                    height: 340,
+                                    fit: BoxFit.contain,
+                                    loadingBuilder: (context, child, progress) {
+                                      if (progress == null) return child;
+                                      return Container(
+                                        height: 340,
+                                        alignment: Alignment.center,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.4,
+                                          color: const Color(0xFF192155),
+                                          value: progress.expectedTotalBytes != null
+                                              ? progress.cumulativeBytesLoaded /
+                                                  (progress.expectedTotalBytes ?? 1)
+                                              : null,
+                                        ),
+                                      );
+                                    },
+                                    errorBuilder:
+                                        (context, error, stackTrace) => Container(
+                                          height: 340,
+                                          alignment: Alignment.center,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.broken_image_rounded,
+                                                  color: Colors.grey.shade400, size: 32),
+                                              const SizedBox(height: 6),
+                                              Text('Failed to load image',
+                                                  style: TextStyle(
+                                                      color: Colors.grey.shade500,
+                                                      fontSize: 12.5)),
+                                            ],
+                                          ),
+                                        ),
                                   ),
                                 ),
+                              ),
+                              Positioned(
+                                top: 10,
+                                right: 10,
+                                child: Material(
+                                  color: Colors.black.withOpacity(0.45),
+                                  shape: const CircleBorder(),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.fullscreen_rounded,
+                                        color: Colors.white, size: 20),
+                                    onPressed: () =>
+                                        _openFullScreenImage(context, imgUrl),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                  ],
-                  if (nonImageUrls.isNotEmpty) ...[
-                    for (var fileUrl in nonImageUrls)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.picture_as_pdf),
-                          label: Text('Open ${fileUrl.split('/').last}'),
-                          onPressed: () {
-                            final ext = _getExtensionFromUrl(fileUrl);
-                            final fileFileName =
-                                Uri.parse(fileUrl).pathSegments.isNotEmpty
-                                    ? Uri.parse(fileUrl).pathSegments.last
-                                    : fileUrl.split('/').last;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => Scaffold(
-                                      appBar: AppBar(
-                                        backgroundColor: const Color(
-                                          0xFF192155,
-                                        ),
-                                        foregroundColor: Colors.white,
-                                        title: Text(fileFileName),
-                                        actions: [
-                                          IconButton(
-                                            onPressed: () {
-                                              _downloadInvoice(
-                                                fileUrl,
-                                                fileFileName,
-                                              );
-                                            },
-                                            icon: const Icon(Icons.download),
-                                          ),
-                                        ],
-                                      ),
-                                      body: _buildInvoiceContent(fileUrl, ext),
+                    ),
+                  const SizedBox(height: 6),
+                ],
+                if (nonImageUrls.isNotEmpty) ...[
+                  Text(
+                    'DOCUMENTS',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  for (var fileUrl in nonImageUrls)
+                    Builder(builder: (context) {
+                      final ext = _getExtensionFromUrl(fileUrl);
+                      final meta = _fileTypeMeta(ext);
+                      final fileFileName =
+                          Uri.parse(fileUrl).pathSegments.isNotEmpty
+                              ? Uri.parse(fileUrl).pathSegments.last
+                              : fileUrl.split('/').last;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade100),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF192155).withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => _buildFileViewerScaffold(
+                                    title: 'Invoice Preview',
+                                    subtitle: fileFileName,
+                                    body: _buildInvoiceContent(fileUrl, ext),
+                                    onDownload: () =>
+                                        _downloadInvoice(fileUrl, fileFileName),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 42,
+                                    height: 42,
+                                    decoration: BoxDecoration(
+                                      color: (meta['color'] as Color)
+                                          .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
+                                    child: Icon(meta['icon'] as IconData,
+                                        color: meta['color'] as Color, size: 21),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          fileFileName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF192155),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Tap to view · ${ext.toUpperCase()}',
+                                          style: TextStyle(
+                                            fontSize: 11.5,
+                                            color: Colors.grey.shade500,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(Icons.chevron_right_rounded,
+                                      color: Colors.grey.shade400),
+                                ],
                               ),
-                            );
-                          },
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Scaffold _buildFileViewerScaffold({
+    required String title,
+    required String subtitle,
+    required Widget body,
+    required VoidCallback onDownload,
+  }) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFE9EBF3),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(68),
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2A3577), Color(0xFF141B44)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 12,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                children: [
+                  Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long_rounded,
+                      color: Colors.white,
+                      size: 19,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.62),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _previewAppBarAction(
+                    icon: Icons.download_rounded,
+                    tooltip: 'Download',
+                    onPressed: onDownload,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: body,
+    );
+  }
+
+  void _openFullScreenImage(BuildContext context, String imageUrl) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return FadeTransition(
+            opacity: animation,
+            child: Scaffold(
+              backgroundColor: Colors.black,
+              body: Stack(
+                children: [
+                  Center(
+                    child: InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 5,
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white70,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) => const Center(
+                          child: Text(
+                            'Failed to load image',
+                            style: TextStyle(color: Colors.white70),
+                          ),
                         ),
                       ),
-                  ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 44,
+                    right: 16,
+                    child: Material(
+                      color: Colors.white.withOpacity(0.15),
+                      shape: const CircleBorder(),
+                      child: IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -2719,42 +3752,137 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
     );
   }
 
+  // Wraps the raw document/image viewer in a framed "paper document" card so
+  // the preview reads like an actual invoice sitting on a desk, instead of a
+  // flat full-bleed viewer.
+  Widget _invoiceDocumentFrame({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFE9EBF3), Color(0xFFDDE0EC)],
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 18),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white, width: 6),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF192155).withOpacity(0.18),
+                  blurRadius: 26,
+                  offset: const Offset(0, 14),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildInvoiceContent(String completeUrl, String extension) {
     if (['jpg', 'jpeg', 'png'].contains(extension)) {
-      return Center(
-        child: Image.network(
-          completeUrl,
-          fit: BoxFit.contain,
-          errorBuilder:
-              (context, error, stackTrace) =>
-                  const Center(child: Text('Failed to load image')),
+      return _invoiceDocumentFrame(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.white,
+          child: Center(
+            child: InteractiveViewer(
+              minScale: 0.8,
+              maxScale: 5,
+              child: Image.network(
+                completeUrl,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return const CircularProgressIndicator(
+                    color: Color(0xFF192155),
+                  );
+                },
+                errorBuilder:
+                    (context, error, stackTrace) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.broken_image_rounded,
+                            color: Colors.grey.shade400, size: 36),
+                        const SizedBox(height: 8),
+                        Text('Failed to load image',
+                            style: TextStyle(color: Colors.grey.shade600)),
+                      ],
+                    ),
+              ),
+            ),
+          ),
         ),
       );
     } else if (extension == 'pdf') {
-      return FutureBuilder<String?>(
-        future: SharedPreferences.getInstance().then(
-          (p) => p.getString('token'),
+      return _invoiceDocumentFrame(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.white,
+          child: FutureBuilder<String?>(
+            future: SharedPreferences.getInstance().then(
+              (p) => p.getString('token'),
+            ),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF192155)),
+                );
+              }
+              return SfPdfViewer.network(
+                completeUrl,
+                enableDoubleTapZooming: true,
+                enableDocumentLinkAnnotation: false,
+                headers:
+                    snapshot.data != null
+                        ? {'Authorization': 'Bearer ${snapshot.data}'}
+                        : {},
+              );
+            },
+          ),
         ),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return SfPdfViewer.network(
-            completeUrl,
-            enableDoubleTapZooming: true,
-            enableDocumentLinkAnnotation: false,
-            headers:
-                snapshot.data != null
-                    ? {'Authorization': 'Bearer ${snapshot.data}'}
-                    : {},
-          );
-        },
       );
     } else {
-      return Center(
-        child: Text(
-          'Unsupported file format',
-          style: TextStyle(color: Colors.red.shade400),
+      return _invoiceDocumentFrame(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Colors.white,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline_rounded, color: Colors.red.shade300, size: 36),
+                const SizedBox(height: 8),
+                Text(
+                  'Unsupported file format',
+                  style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
@@ -2895,18 +4023,18 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
         statusText.toUpperCase(),
         style: TextStyle(
           color: textColor,
-          fontSize: 11,
+          fontSize: 9.5,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
         ),
       ),
     );
@@ -3208,10 +4336,10 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                 0.6,
                               ),
                               child: Container(
-                                margin: const EdgeInsets.only(bottom: 16),
+                                margin: const EdgeInsets.only(bottom: 10),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(18),
+                                  borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: Colors.grey.shade100,
                                   ),
@@ -3231,7 +4359,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                   ],
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
+                                  borderRadius: BorderRadius.circular(16),
                                   child: Stack(
                                     children: [
                                       Positioned(
@@ -3239,7 +4367,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                         top: 0,
                                         bottom: 0,
                                         child: Container(
-                                          width: 4,
+                                          width: 3,
                                           color: _getStatusAccentColor(
                                             invoice['ai_status'],
                                           ),
@@ -3247,10 +4375,10 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.fromLTRB(
-                                          14,
-                                          16,
-                                          16,
-                                          16,
+                                          12,
+                                          11,
+                                          12,
+                                          11,
                                         ),
                                         child: Column(
                                           crossAxisAlignment:
@@ -3274,25 +4402,25 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                         ),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          20,
+                                                          16,
                                                         ),
                                                     boxShadow: [
                                                       BoxShadow(
                                                         color: const Color(
                                                           0xFF6C4DDA,
                                                         ).withOpacity(0.3),
-                                                        blurRadius: 6,
+                                                        blurRadius: 4,
                                                         offset: const Offset(
                                                           0,
-                                                          2,
+                                                          1,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                        horizontal: 11,
-                                                        vertical: 5,
+                                                        horizontal: 8,
+                                                        vertical: 3,
                                                       ),
                                                   child: Row(
                                                     mainAxisSize:
@@ -3301,15 +4429,15 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                       const Icon(
                                                         Icons
                                                             .description_rounded,
-                                                        size: 12,
+                                                        size: 10,
                                                         color: Colors.white,
                                                       ),
-                                                      const SizedBox(width: 4),
+                                                      const SizedBox(width: 3),
                                                       Text(
                                                         invoice['category']?['name'] ??
                                                             'Uncategorized',
                                                         style: const TextStyle(
-                                                          fontSize: 11,
+                                                          fontSize: 9.5,
                                                           fontWeight:
                                                               FontWeight.w600,
                                                           color: Colors.white,
@@ -3318,7 +4446,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                     ],
                                                   ),
                                                 ),
-                                                const SizedBox(width: 8),
+                                                const SizedBox(width: 6),
                                                 Container(
                                                   decoration: BoxDecoration(
                                                     gradient:
@@ -3335,31 +4463,31 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                         ),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          20,
+                                                          16,
                                                         ),
                                                     boxShadow: [
                                                       BoxShadow(
                                                         color: const Color(
                                                           0xFF2FA65A,
                                                         ).withOpacity(0.3),
-                                                        blurRadius: 6,
+                                                        blurRadius: 4,
                                                         offset: const Offset(
                                                           0,
-                                                          2,
+                                                          1,
                                                         ),
                                                       ),
                                                     ],
                                                   ),
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                        horizontal: 11,
-                                                        vertical: 5,
+                                                        horizontal: 8,
+                                                        vertical: 3,
                                                       ),
                                                   child: Text(
                                                     invoice['invoiced_to'] ??
                                                         'No Company Found',
                                                     style: const TextStyle(
-                                                      fontSize: 11,
+                                                      fontSize: 9.5,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       color: Colors.white,
@@ -3368,7 +4496,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 12),
+                                            const SizedBox(height: 8),
                                             Row(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
@@ -3385,7 +4513,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                       style: const TextStyle(
                                                         fontWeight:
                                                             FontWeight.w700,
-                                                        fontSize: 17,
+                                                        fontSize: 14.5,
                                                         color: Color(
                                                           0xFF192155,
                                                         ),
@@ -3394,12 +4522,12 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(width: 12),
+                                                const SizedBox(width: 8),
                                                 Container(
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 5,
+                                                        horizontal: 8,
+                                                        vertical: 4,
                                                       ),
                                                   decoration: BoxDecoration(
                                                     color: const Color(
@@ -3407,7 +4535,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                     ).withOpacity(0.08),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          10,
+                                                          8,
                                                         ),
                                                   ),
                                                   child: Text(
@@ -3415,36 +4543,36 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                     style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.w800,
-                                                      fontSize: 16,
+                                                      fontSize: 13.5,
                                                       color: Color(0xFF192155),
                                                     ),
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 8),
+                                            const SizedBox(height: 6),
                                             Row(
                                               children: [
                                                 Container(
-                                                  width: 22,
-                                                  height: 22,
+                                                  width: 18,
+                                                  height: 18,
                                                   decoration: BoxDecoration(
                                                     color: Colors.grey.shade100,
                                                     shape: BoxShape.circle,
                                                   ),
                                                   child: Icon(
                                                     Icons.business_rounded,
-                                                    size: 13,
+                                                    size: 11,
                                                     color: Colors.grey.shade500,
                                                   ),
                                                 ),
-                                                const SizedBox(width: 8),
+                                                const SizedBox(width: 6),
                                                 Expanded(
                                                   child: Text(
                                                     invoice['company']?['name'] ??
                                                         'No company found',
                                                     style: TextStyle(
-                                                      fontSize: 14,
+                                                      fontSize: 12.5,
                                                       color:
                                                           Colors.grey.shade600,
                                                       fontWeight:
@@ -3456,64 +4584,13 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                 ),
                                               ],
                                             ),
-                                            const SizedBox(height: 8),
-                                            // CORRECTED: Display uploaded file information
-                                            // if (uploadedFile != null &&
-                                            //     publicUrl != null)
-                                            //   Row(
-                                            //     children: [
-                                            //       Icon(
-                                            //         _getFileIcon(publicUrl),
-                                            //         size: 16,
-                                            //         color: Colors.grey.shade600,
-                                            //       ),
-                                            //       const SizedBox(width: 6),
-                                            //       Expanded(
-                                            //         child: Text(
-                                            //           uploadedFile['original_name'] ??
-                                            //               _getFileName(publicUrl),
-                                            //           style: TextStyle(
-                                            //             fontSize: 13,
-                                            //             color: Colors.grey.shade600,
-                                            //           ),
-                                            //           overflow: TextOverflow.ellipsis,
-                                            //         ),
-                                            //       ),
-                                            //       if (_loadingPreviewId ==
-                                            //           invoice['id'])
-                                            //         Padding(
-                                            //           padding: const EdgeInsets.only(
-                                            //             left: 8,
-                                            //           ),
-                                            //           child: SizedBox(
-                                            //             width: 16,
-                                            //             height: 16,
-                                            //             child: CircularProgressIndicator(
-                                            //               strokeWidth: 2,
-                                            //               valueColor:
-                                            //                   AlwaysStoppedAnimation(
-                                            //                     Colors.blue[900]!,
-                                            //                   ),
-                                            //             ),
-                                            //           ),
-                                            //         ),
-                                            //     ],
-                                            //   )
-                                            // else
-                                            //   Text(
-                                            //     'No file uploaded',
-                                            //     style: TextStyle(
-                                            //       fontSize: 13,
-                                            //       color: Colors.grey.shade600,
-                                            //     ),
-                                            //   ),
-                                            const SizedBox(height: 10),
+                                            const SizedBox(height: 6),
                                             Divider(
                                               color: Colors.grey.shade200,
                                               thickness: 1,
                                               height: 1,
                                             ),
-                                            const SizedBox(height: 10),
+                                            const SizedBox(height: 6),
                                             Row(
                                               children: [
                                                 Row(
@@ -3521,18 +4598,18 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                     Icon(
                                                       Icons
                                                           .calendar_today_outlined,
-                                                      size: 15,
+                                                      size: 13,
                                                       color:
                                                           Colors.grey.shade500,
                                                     ),
-                                                    const SizedBox(width: 7),
+                                                    const SizedBox(width: 5),
                                                     Text(
                                                       _formatDate(
                                                         invoice['date'] ??
                                                             'No date found',
                                                       ),
                                                       style: TextStyle(
-                                                        fontSize: 13.5,
+                                                        fontSize: 12,
                                                         color:
                                                             Colors
                                                                 .grey
@@ -3551,9 +4628,17 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                                       Padding(
                                                         padding:
                                                             const EdgeInsets.only(
-                                                              left: 10,
+                                                              left: 6,
                                                             ),
                                                         child: IconButton(
+                                                          padding:
+                                                              EdgeInsets.zero,
+                                                          constraints:
+                                                              const BoxConstraints(
+                                                                minWidth: 30,
+                                                                minHeight: 30,
+                                                              ),
+                                                          iconSize: 18,
                                                           onPressed:
                                                               _reprocessingIds
                                                                       .contains(

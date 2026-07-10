@@ -43,6 +43,10 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  late Animation<double> _logoFade;
+  late Animation<double> _logoScale;
+  late Animation<Offset> _textSlide;
+  late Animation<double> _textFade;
 
   @override
   void initState() {
@@ -55,6 +59,31 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     )..addListener(() {
         setState(() {}); // UI ko update karne ke liye
       });
+
+    // Entrance animations derived from the same controller/timeline
+    _logoFade = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+    );
+    _logoScale = Tween<double>(begin: 0.82, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeOutBack),
+      ),
+    );
+    _textFade = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.25, 0.65, curve: Curves.easeOut),
+    );
+    _textSlide = Tween<Offset>(
+      begin: const Offset(0, 0.25),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.25, 0.65, curve: Curves.easeOutCubic),
+      ),
+    );
 
     // Animation start karna
     _animationController.forward().then((value) {
@@ -185,52 +214,168 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Logo aur Text ko center se thoda upar shift kiya gaya hai
+          // Decorative soft glow blobs for depth (subtle, light theme)
+          Positioned(
+            top: -size.width * 0.35,
+            right: -size.width * 0.3,
+            child: Container(
+              width: size.width * 0.85,
+              height: size.width * 0.85,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF7C5CFA).withOpacity(0.08),
+                    const Color(0xFF7C5CFA).withOpacity(0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -size.width * 0.4,
+            left: -size.width * 0.35,
+            child: Container(
+              width: size.width * 0.9,
+              height: size.width * 0.9,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF3CBD6B).withOpacity(0.07),
+                    const Color(0xFF3CBD6B).withOpacity(0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Main centered content: logo card + title
           Align(
-            // y (vertical) axis ko -0.3 set kiya hai (-1.0 top hota hai, 0.0 center, 1.0 bottom)
-            alignment: const Alignment(0.0, -0.3), 
+            alignment: const Alignment(0.0, -0.22),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: Image.asset(
-                    'assets/images/img_1.png',
-                    height: 180,
-                    width: 280,
-                    fit: BoxFit.contain,
+                FadeTransition(
+                  opacity: _logoFade,
+                  child: ScaleTransition(
+                    scale: _logoScale,
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      margin: const EdgeInsets.only(bottom: 22),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(color: Colors.grey.shade100),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF192155).withOpacity(0.10),
+                            blurRadius: 30,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 14),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/img_1.png',
+                        height: 150,
+                        width: 230,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                 ),
-                const Text(
-                  'Invoice Management',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF134CB5),
-                    letterSpacing: 0.5,
+                FadeTransition(
+                  opacity: _textFade,
+                  child: SlideTransition(
+                    position: _textSlide,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Invoice Management',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF134CB5),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Smart. Simple. Streamlined.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey.shade500,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          
-          // Bottom Content: Animated Linear Progress Bar
+
+          // Bottom Content: Animated gradient progress bar + status text
           Positioned(
-            bottom: 80, 
-            left: 60,   
-            right: 60,  
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: _animationController.value, 
-                minHeight: 6,
-                backgroundColor: Colors.blue.withOpacity(0.15),
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF192155)),
-              ),
+            bottom: 70,
+            left: 60,
+            right: 60,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: _animationController.value.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF7C5CFA), Color(0xFF192155)],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF192155).withOpacity(0.35),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Getting things ready...',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade500,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
