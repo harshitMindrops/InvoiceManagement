@@ -1,0 +1,14 @@
+
+BASEURL=https://invoice-api.mindrops.com/api/v1
+
+
+https://invoice-staging-api.mindrops.com/api/v1
+
+
+authservice - 1
+authguard - 1
+listenservie - 3
+mainapi - 3
+verifyotpscreen - 1
+main - 1
+homescreen - 1

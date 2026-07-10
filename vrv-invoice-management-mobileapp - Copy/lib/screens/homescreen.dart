@@ -1077,382 +1077,296 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
         var cameraStatus = Permission.camera.status;
         var storageStatus = Permission.storage.status;
         return Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                const Color(0xFF192155).withOpacity(0.035),
-                Colors.white,
-              ],
-              stops: const [0.0, 0.35],
-            ),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(28),
-              topRight: Radius.circular(28),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 42,
+                    width: 40,
                     height: 4,
                     decoration: BoxDecoration(
                       color: Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
                   const Text(
-                    'Upload Invoices',
+                    'Upload Invoice',
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                       color: Color(0xFF192155),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Choose how you\'d like to add your invoice',
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                  const SizedBox(height: 20),
+                  _buildUploadOption(
+                    icon: Icons.camera_alt_rounded,
+                    title: 'Take Photo',
+                    subtitle: 'Capture up to 3 images with camera',
+                    onTap: () async {
+                      if (cameraStatus.isGranted == false) {
+                        ScaffoldMessenger.of(parentContext).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Camera permission is required.',
+                            ),
+                            backgroundColor: Colors.red.shade400,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.pop(bottomSheetContext);
+                      try {
+                        final XFile? photo = await _picker.pickImage(
+                          source: ImageSource.camera,
+                          imageQuality: 80,
+                        );
+                        if (photo != null) {
+                          final newFile = File(photo.path);
+                          final extension =
+                              photo.path.split('.').last.toLowerCase();
+                          if (!['jpg', 'jpeg', 'png'].contains(extension)) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'Only JPG or PNG images are allowed.',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          final fileSize = await newFile.length();
+                          if (fileSize > 10 * 1024 * 1024) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'Image size exceeds 10MB limit.',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          setState(() {
+                            _selectedImages = [
+                              newFile,
+                            ]; // Replace existing images
+                            _selectedFile = null;
+                            _isPhotoTaken = true;
+                          });
+                          _showSelectedFilesModal(parentContext, "Photo");
+                        } else {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                            SnackBar(
+                              content: const Text('Photo capture cancelled'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(parentContext).showSnackBar(
+                          SnackBar(
+                            content: Text('Camera error: $e'),
+                            backgroundColor: Colors.red.shade400,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
-                  const SizedBox(height: 22),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildUploadOptionCard(
-                          icon: Icons.camera_alt_rounded,
-                          gradientColors: const [
-                            Color(0xFF6C8DFA),
-                            Color(0xFF7C5CFA),
-                          ],
-                          title: 'Camera',
-                          subtitle: 'Snap a photo of\nyour invoice.',
-                          onTap: () async {
-                            if (cameraStatus.isGranted == false) {
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    'Camera permission is required.',
-                                  ),
-                                  backgroundColor: Colors.red.shade400,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                            Navigator.pop(bottomSheetContext);
-                            try {
-                              final XFile? photo = await _picker.pickImage(
-                                source: ImageSource.camera,
-                                imageQuality: 80,
-                              );
-                              if (photo != null) {
-                                final newFile = File(photo.path);
-                                final extension =
-                                    photo.path.split('.').last.toLowerCase();
-                                if (![
-                                  'jpg',
-                                  'jpeg',
-                                  'png',
-                                ].contains(extension)) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'Only JPG or PNG images are allowed.',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                final fileSize = await newFile.length();
-                                if (fileSize > 10 * 1024 * 1024) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'Image size exceeds 10MB limit.',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                setState(() {
-                                  _selectedImages = [
-                                    newFile,
-                                  ]; // Replace existing images
-                                  _selectedFile = null;
-                                  _isPhotoTaken = true;
-                                });
-                                _showSelectedFilesModal(parentContext, "Photo");
-                              } else {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(
-                                  parentContext,
-                                ).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                      'Photo capture cancelled',
-                                    ),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                SnackBar(
-                                  content: Text('Camera error: $e'),
-                                  backgroundColor: Colors.red.shade400,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: _buildUploadOptionCard(
-                          icon: Icons.folder_rounded,
-                          gradientColors: const [
-                            Color(0xFFFFA751),
-                            Color(0xFFE8722A),
-                          ],
-                          title: 'Files',
-                          subtitle: 'Select documents\nfrom your device.',
-                          onTap: () async {
-                            if (storageStatus.isGranted == false) {
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                    'Storage permission is required.',
-                                  ),
-                                  backgroundColor: Colors.red.shade400,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-                            Navigator.pop(bottomSheetContext);
-                            try {
-                              FilePickerResult? result = await FilePicker
-                                  .platform
-                                  .pickFiles(
-                                    allowMultiple: true,
-                                    type: FileType.custom,
-                                    allowedExtensions: [
-                                      'pdf',
-                                      'doc',
-                                      'docx',
-                                      'jpg',
-                                      'jpeg',
-                                      'png',
-                                    ],
-                                  );
+                  const SizedBox(height: 12),
+                  _buildUploadOption(
+                    icon: Icons.upload_file_rounded,
+                    title: 'Upload from Device',
+                    subtitle: 'Select 1 PDF/DOC ',
+                    onTap: () async {
+                      if (storageStatus.isGranted == false) {
+                        ScaffoldMessenger.of(parentContext).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                              'Storage permission is required.',
+                            ),
+                            backgroundColor: Colors.red.shade400,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      Navigator.pop(bottomSheetContext);
+                      try {
+                        FilePickerResult? result = await FilePicker.platform
+                            .pickFiles(
+                              allowMultiple: true,
+                              type: FileType.custom,
+                              allowedExtensions: [
+                                'pdf',
+                                'doc',
+                                'docx',
+                                'jpg',
+                                'jpeg',
+                                'png',
+                              ],
+                            );
 
-                              if (result != null && result.files.isNotEmpty) {
-                                final files =
-                                    result.files
-                                        .map((f) => File(f.path!))
-                                        .toList();
-                                int imageCount =
-                                    files
-                                        .where(
-                                          (f) =>
-                                              ['jpg', 'jpeg', 'png'].contains(
-                                                f.path
-                                                    .split('.')
-                                                    .last
-                                                    .toLowerCase(),
-                                              ),
-                                        )
-                                        .length;
-                                int docCount =
-                                    files
-                                        .where(
-                                          (f) =>
-                                              ['pdf', 'doc', 'docx'].contains(
-                                                f.path
-                                                    .split('.')
-                                                    .last
-                                                    .toLowerCase(),
-                                              ),
-                                        )
-                                        .length;
+                        if (result != null && result.files.isNotEmpty) {
+                          final files =
+                              result.files.map((f) => File(f.path!)).toList();
+                          int imageCount =
+                              files
+                                  .where(
+                                    (f) => ['jpg', 'jpeg', 'png'].contains(
+                                      f.path.split('.').last.toLowerCase(),
+                                    ),
+                                  )
+                                  .length;
+                          int docCount =
+                              files
+                                  .where(
+                                    (f) => ['pdf', 'doc', 'docx'].contains(
+                                      f.path.split('.').last.toLowerCase(),
+                                    ),
+                                  )
+                                  .length;
 
-                                if (imageCount > 0 && docCount > 0) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'Cannot upload both images and documents together.',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                if (imageCount > 3) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'You can upload a maximum of 3 images.',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                if (docCount > 1) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'You can upload only 1 document (PDF/DOC/DOCX).',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                // Moved size check here to cover both images and documents
-                                bool exceedsSize = false;
-                                for (var file in files) {
-                                  final fileSize = await file.length();
-                                  if (fileSize > 10 * 1024 * 1024) {
-                                    exceedsSize = true;
-                                    break;
-                                  }
-                                }
-                                if (exceedsSize) {
-                                  ScaffoldMessenger.of(
-                                    parentContext,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'One or more files exceed 10MB limit.',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-
-                                setState(() {
-                                  if (imageCount > 0) {
-                                    _selectedImages =
-                                        files; // Replace existing images
-                                    _selectedFile = null;
-                                    _isPhotoTaken = false;
-                                  } else {
-                                    _selectedFile =
-                                        files
-                                            .first; // Replace existing document
-                                    _selectedImages = [];
-                                    _isPhotoTaken = false;
-                                  }
-                                });
-                                _showSelectedFilesModal(parentContext, "File");
-                              } else {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(
-                                  parentContext,
-                                ).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('No files selected'),
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (!mounted) return;
-                              ScaffoldMessenger.of(parentContext).showSnackBar(
-                                SnackBar(
-                                  content: Text('File selection error: $e'),
-                                  backgroundColor: Colors.red.shade400,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
+                          if (imageCount > 0 && docCount > 0) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'Cannot upload both images and documents together.',
                                 ),
-                              );
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          if (imageCount > 3) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'You can upload a maximum of 3 images.',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          if (docCount > 1) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'You can upload only 1 document (PDF/DOC/DOCX).',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          // Moved size check here to cover both images and documents
+                          bool exceedsSize = false;
+                          for (var file in files) {
+                            final fileSize = await file.length();
+                            if (fileSize > 10 * 1024 * 1024) {
+                              exceedsSize = true;
+                              break;
                             }
-                          },
-                        ),
-                      ),
-                    ],
+                          }
+                          if (exceedsSize) {
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'One or more files exceed 10MB limit.',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            if (imageCount > 0) {
+                              _selectedImages =
+                                  files; // Replace existing images
+                              _selectedFile = null;
+                              _isPhotoTaken = false;
+                            } else {
+                              _selectedFile =
+                                  files.first; // Replace existing document
+                              _selectedImages = [];
+                              _isPhotoTaken = false;
+                            }
+                          });
+                          _showSelectedFilesModal(parentContext, "File");
+                        } else {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                            SnackBar(
+                              content: const Text('No files selected'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(parentContext).showSnackBar(
+                          SnackBar(
+                            content: Text('File selection error: $e'),
+                            backgroundColor: Colors.red.shade400,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        );
+                      }
+                    },
                   ),
-                  const SizedBox(height: 22),
-                  InkWell(
-                    onTap: () => Navigator.pop(bottomSheetContext),
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Text(
-                        'Cancel',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -2413,128 +2327,50 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
     );
   }
 
-  Widget _buildUploadOptionCard({
+  Widget _buildUploadOption({
     required IconData icon,
-    required List<Color> gradientColors,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [gradientColors.first.withOpacity(0.07), Colors.white],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.grey.shade100),
-          boxShadow: [
-            BoxShadow(
-              color: gradientColors.last.withOpacity(0.22),
-              blurRadius: 26,
-              offset: const Offset(0, 14),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            SizedBox(
-              width: 92,
-              height: 86,
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.none,
+            Icon(icon, size: 24, color: Color(0xFF192155)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: gradientColors.last.withOpacity(0.14),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF192155),
                     ),
                   ),
-                  Positioned(
-                    left: 4,
-                    top: 12,
-                    child: Transform.rotate(
-                      angle: -0.24,
-                      child: Container(
-                        width: 28,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: gradientColors.first.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 4,
-                    top: 12,
-                    child: Transform.rotate(
-                      angle: 0.24,
-                      child: Container(
-                        width: 28,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: gradientColors.last.withOpacity(0.4),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 62,
-                    height: 62,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: gradientColors,
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: gradientColors.last.withOpacity(0.4),
-                          blurRadius: 14,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Icon(icon, size: 28, color: Colors.white),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16.5,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF192155),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12.5,
-                color: Colors.grey.shade500,
-                height: 1.35,
-              ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey.shade400,
             ),
           ],
         ),
@@ -2591,10 +2427,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
           if (nonImageUrls.length == 1 && imageUrls.isEmpty) {
             final url = nonImageUrls.first;
             final extension = _getExtensionFromUrl(url);
-            final fileName =
-                Uri.parse(url).pathSegments.isNotEmpty
-                    ? Uri.parse(url).pathSegments.last
-                    : url.split('/').last;
+            final fileName = Uri.parse(url).pathSegments.isNotEmpty
+                ? Uri.parse(url).pathSegments.last
+                : url.split('/').last;
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: const Color(0xFF192155),
@@ -2625,10 +2460,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                     icon: const Icon(Icons.download),
                     onPressed: () async {
                       for (var imgUrl in imageUrls) {
-                        final imgFileName =
-                            Uri.parse(imgUrl).pathSegments.isNotEmpty
-                                ? Uri.parse(imgUrl).pathSegments.last
-                                : imgUrl.split('/').last;
+                        final imgFileName = Uri.parse(imgUrl).pathSegments.isNotEmpty
+                            ? Uri.parse(imgUrl).pathSegments.last
+                            : imgUrl.split('/').last;
                         await _downloadInvoice(imgUrl, imgFileName);
                       }
                     },
@@ -2675,10 +2509,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                           label: Text('Open ${fileUrl.split('/').last}'),
                           onPressed: () {
                             final ext = _getExtensionFromUrl(fileUrl);
-                            final fileFileName =
-                                Uri.parse(fileUrl).pathSegments.isNotEmpty
-                                    ? Uri.parse(fileUrl).pathSegments.last
-                                    : fileUrl.split('/').last;
+                            final fileFileName = Uri.parse(fileUrl).pathSegments.isNotEmpty
+                                ? Uri.parse(fileUrl).pathSegments.last
+                                : fileUrl.split('/').last;
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -2732,9 +2565,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
       );
     } else if (extension == 'pdf') {
       return FutureBuilder<String?>(
-        future: SharedPreferences.getInstance().then(
-          (p) => p.getString('token'),
-        ),
+        future: SharedPreferences.getInstance().then((p) => p.getString('token')),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -2743,10 +2574,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
             completeUrl,
             enableDoubleTapZooming: true,
             enableDocumentLinkAnnotation: false,
-            headers:
-                snapshot.data != null
-                    ? {'Authorization': 'Bearer ${snapshot.data}'}
-                    : {},
+            headers: snapshot.data != null
+                ? {'Authorization': 'Bearer ${snapshot.data}'}
+                : {},
           );
         },
       );
@@ -2816,10 +2646,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
       await dio.download(
         url,
         filePath,
-        options:
-            token != null
-                ? Options(headers: {'Authorization': 'Bearer $token'})
-                : null,
+        options: token != null
+            ? Options(headers: {'Authorization': 'Bearer $token'})
+            : null,
       );
 
       if (!mounted) return;
@@ -2857,56 +2686,41 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
     }
   }
 
-  Color _getStatusAccentColor(String? status) {
-    final statusText = (status ?? '').toUpperCase().replaceAll('_', ' ');
-    switch (statusText) {
-      case 'AI PROCESSED':
-        return const Color(0xFF2FA65A);
-      case 'AI FAILED':
-        return const Color(0xFFE05353);
-      case 'AI PROCESSING':
-        return const Color(0xFFE0A527);
-      default:
-        return const Color(0xFF3E7BFA);
-    }
-  }
-
   Widget _getStatusChip(String? status) {
     final statusText = (status ?? 'actuator').replaceAll('_', ' ');
-    Color bgColor;
+    Color borderColor;
     Color textColor;
 
     switch (statusText.toUpperCase()) {
       case 'AI PROCESSED':
-        bgColor = const Color(0xFFDFF5E3);
-        textColor = const Color(0xFF1E8A44);
+        borderColor = Colors.green.shade100;
+        textColor = Colors.green.shade700;
         break;
       case 'AI FAILED':
-        bgColor = const Color(0xFFFBE0E0);
-        textColor = const Color(0xFFC62828);
+        borderColor = Colors.red.shade100;
+        textColor = Colors.red.shade700;
         break;
       case 'AI PROCESSING':
-        bgColor = const Color(0xFFFFF1D6);
-        textColor = const Color(0xFFB4740E);
+        borderColor = Colors.orange.shade100;
+        textColor = Colors.orange.shade700;
         break;
       default:
-        bgColor = const Color(0xFFDCE7FB);
-        textColor = const Color(0xFF1E5FBF);
+        borderColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade700;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        statusText.toUpperCase(),
+        statusText,
         style: TextStyle(
           color: textColor,
           fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.3,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
@@ -2933,66 +2747,33 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color(0xFFF3F4F7),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF192155), Color(0xFF2A3577)],
+      backgroundColor: Colors.grey.shade100,
+      appBar: AppBar(
+        title: const Text(
+          'Invoice Management',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+        ),
+        backgroundColor: Color(0xFF192155),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
             ),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(26),
-              bottomRight: Radius.circular(26),
+            child: IconButton(
+              icon: const Icon(Icons.logout_rounded, size: 20),
+              tooltip: 'Logout',
+              onPressed: () => _showLogoutConfirmation(context),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF192155).withOpacity(0.35),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
           ),
-          child: SafeArea(
-            child: SizedBox(
-              height: 64,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Center(
-                    child: Text(
-                      'Invoice Management',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 20,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 8,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.14),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.logout_rounded,
-                          color: Colors.white,
-                          size: 21,
-                        ),
-                        tooltip: 'Logout',
-                        onPressed: () => _showLogoutConfirmation(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+        ],
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(16),
+            bottomRight: Radius.circular(16),
           ),
         ),
       ),
@@ -3001,43 +2782,31 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
           Column(
             children: [
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+                padding: const EdgeInsets.fromLTRB(16, 16, 10, 2),
                 child: Row(
                   children: [
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade100),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF192155).withOpacity(0.08),
-                              blurRadius: 14,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade200),
                         ),
                         child: TextField(
                           controller: _searchController,
                           focusNode: _searchFocusNode,
-                          style: const TextStyle(fontSize: 15),
                           decoration: InputDecoration(
                             hintText: 'Search invoices...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey.shade400,
-                              fontSize: 15,
-                            ),
                             prefixIcon: Icon(
                               Icons.search_rounded,
                               color: Colors.grey.shade400,
-                              size: 22,
+                              size: 20,
                             ),
                             suffixIcon:
                                 _searchController.text.isNotEmpty
                                     ? IconButton(
                                       icon: Icon(
-                                        Icons.clear_rounded,
+                                        Icons.clear,
                                         color: Colors.grey.shade400,
                                       ),
                                       onPressed: () {
@@ -3049,55 +2818,26 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
-                              vertical: 14,
+                              vertical: 12,
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Container(
-                      width: 50,
-                      height: 50,
                       decoration: BoxDecoration(
-                        gradient:
-                            _selectedCategory?['id'] == null
-                                ? null
-                                : const LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF192155),
-                                    Color(0xFF2A3577),
-                                  ],
-                                ),
-                        color:
-                            _selectedCategory?['id'] == null
-                                ? Colors.white
-                                : null,
-                        borderRadius: BorderRadius.circular(16),
-                        border:
-                            _selectedCategory?['id'] == null
-                                ? Border.all(color: Colors.grey.shade100)
-                                : null,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF192155).withOpacity(
-                              _selectedCategory?['id'] == null ? 0.08 : 0.28,
-                            ),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade200),
                       ),
                       child: IconButton(
                         icon: Icon(
-                          Icons.tune_rounded,
+                          Icons.filter_list_rounded,
                           color:
                               _selectedCategory?['id'] == null
-                                  ? Colors.grey.shade500
-                                  : Colors.white,
-                          size: 22,
+                                  ? Colors.grey.shade400
+                                  : Color(0xFF192155),
                         ),
                         tooltip: 'Filter by Category',
                         onPressed: _showCategoriesFilterDialog,
@@ -3201,526 +2941,368 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                     setState(() => _loadingPreviewId = null);
                                 }
                               },
-                              borderRadius: BorderRadius.circular(18),
-                              splashColor: Color(0xFF192155).withOpacity(0.15),
-                              hoverColor: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                              splashColor: Color(0xFF192155).withOpacity(0.2),
+                              hoverColor: Colors.grey.shade200,
                               highlightColor: Colors.grey.shade100.withOpacity(
-                                0.6,
+                                0.7,
                               ),
                               child: Container(
-                                margin: const EdgeInsets.only(bottom: 16),
+                                margin: const EdgeInsets.only(bottom: 12),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
-                                    color: Colors.grey.shade100,
+                                    color: Colors.grey.shade200,
                                   ),
+                                  borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(
-                                        0xFF192155,
-                                      ).withOpacity(0.08),
-                                      blurRadius: 18,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.03),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(18),
-                                  child: Stack(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Positioned(
-                                        left: 0,
-                                        top: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          width: 4,
-                                          color: _getStatusAccentColor(
-                                            invoice['ai_status'],
+                                      Row(
+                                        children: [
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: _getColorForCategory(
+                                                invoice['category']?['name'],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
+                                            child: Text(
+                                              invoice['category']?['name'] ??
+                                                  'Uncategorized',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey.shade900,
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: _getColorForCategory(
+                                                invoice['invoiced_to'],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 4,
+                                            ),
+                                            child: Text(
+                                              invoice['invoiced_to'] ??
+                                                  'No Company Found ',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                color: Colors.grey.shade900,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              child: Text(
+                                                invoice['invoice_number'] ==
+                                                        null
+                                                    ? "No invoice number found"
+                                                    : "#INV-${invoice['invoice_number']}",
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(width: 24),
+                                          Text(
+                                            '₹${invoice['amount'] ?? '0'}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16,
+                                              color: Color(0xFF192155),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          invoice['company']?['name'] ??
+                                              'No company found',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey.shade600,
                                           ),
                                         ),
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                          14,
-                                          16,
-                                          16,
-                                          16,
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    gradient:
-                                                        const LinearGradient(
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end:
-                                                              Alignment
-                                                                  .bottomRight,
-                                                          colors: [
-                                                            Color(0xFF7C5CFA),
-                                                            Color(0xFF6C4DDA),
-                                                          ],
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: const Color(
-                                                          0xFF6C4DDA,
-                                                        ).withOpacity(0.3),
-                                                        blurRadius: 6,
-                                                        offset: const Offset(
-                                                          0,
-                                                          2,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                      const SizedBox(height: 8),
+                                      // CORRECTED: Display uploaded file information
+                                      // if (uploadedFile != null &&
+                                      //     publicUrl != null)
+                                      //   Row(
+                                      //     children: [
+                                      //       Icon(
+                                      //         _getFileIcon(publicUrl),
+                                      //         size: 16,
+                                      //         color: Colors.grey.shade600,
+                                      //       ),
+                                      //       const SizedBox(width: 6),
+                                      //       Expanded(
+                                      //         child: Text(
+                                      //           uploadedFile['original_name'] ??
+                                      //               _getFileName(publicUrl),
+                                      //           style: TextStyle(
+                                      //             fontSize: 13,
+                                      //             color: Colors.grey.shade600,
+                                      //           ),
+                                      //           overflow: TextOverflow.ellipsis,
+                                      //         ),
+                                      //       ),
+                                      //       if (_loadingPreviewId ==
+                                      //           invoice['id'])
+                                      //         Padding(
+                                      //           padding: const EdgeInsets.only(
+                                      //             left: 8,
+                                      //           ),
+                                      //           child: SizedBox(
+                                      //             width: 16,
+                                      //             height: 16,
+                                      //             child: CircularProgressIndicator(
+                                      //               strokeWidth: 2,
+                                      //               valueColor:
+                                      //                   AlwaysStoppedAnimation(
+                                      //                     Colors.blue[900]!,
+                                      //                   ),
+                                      //             ),
+                                      //           ),
+                                      //         ),
+                                      //     ],
+                                      //   )
+                                      // else
+                                      //   Text(
+                                      //     'No file uploaded',
+                                      //     style: TextStyle(
+                                      //       fontSize: 13,
+                                      //       color: Colors.grey.shade600,
+                                      //     ),
+                                      //   ),
+                                      const SizedBox(height: 9),
+                                      Divider(
+                                        color: Colors.grey.shade200,
+                                        thickness: 1,
+                                        height: 1,
+                                      ),
+                                      const SizedBox(height: 9),
+                                      Row(
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.calendar_today,
+                                                size: 14,
+                                                color: Colors.grey.shade500,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                _formatDate(
+                                                  invoice['date'] ??
+                                                      'No date found',
+                                                ),
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const Spacer(),
+                                          Row(
+                                            children: [
+                                              if (invoice['ai_status'] ==
+                                                  "AI_FAILED")
+                                                Padding(
                                                   padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 11,
-                                                        vertical: 5,
+                                                      const EdgeInsets.only(
+                                                        left: 10,
                                                       ),
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      const Icon(
-                                                        Icons
-                                                            .description_rounded,
-                                                        size: 12,
-                                                        color: Colors.white,
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Text(
-                                                        invoice['category']?['name'] ??
-                                                            'Uncategorized',
-                                                        style: const TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color: Colors.white,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                    gradient:
-                                                        const LinearGradient(
-                                                          begin:
-                                                              Alignment.topLeft,
-                                                          end:
-                                                              Alignment
-                                                                  .bottomRight,
-                                                          colors: [
-                                                            Color(0xFF3CBD6B),
-                                                            Color(0xFF2FA65A),
-                                                          ],
-                                                        ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: const Color(
-                                                          0xFF2FA65A,
-                                                        ).withOpacity(0.3),
-                                                        blurRadius: 6,
-                                                        offset: const Offset(
-                                                          0,
-                                                          2,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 11,
-                                                        vertical: 5,
-                                                      ),
-                                                  child: Text(
-                                                    invoice['invoiced_to'] ??
-                                                        'No Company Found',
-                                                    style: const TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: SingleChildScrollView(
-                                                    scrollDirection:
-                                                        Axis.horizontal,
-                                                    child: Text(
-                                                      invoice['invoice_number'] ==
-                                                              null
-                                                          ? "No invoice number found"
-                                                          : "#INV-${invoice['invoice_number']}",
-                                                      style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w700,
-                                                        fontSize: 17,
-                                                        color: Color(
-                                                          0xFF192155,
-                                                        ),
-                                                        letterSpacing: 0.1,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 12),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 10,
-                                                        vertical: 5,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(
-                                                      0xFF192155,
-                                                    ).withOpacity(0.08),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          10,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    '₹${invoice['amount'] ?? '0'}',
-                                                    style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w800,
-                                                      fontSize: 16,
-                                                      color: Color(0xFF192155),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  width: 22,
-                                                  height: 22,
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.grey.shade100,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: Icon(
-                                                    Icons.business_rounded,
-                                                    size: 13,
-                                                    color: Colors.grey.shade500,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    invoice['company']?['name'] ??
-                                                        'No company found',
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            // CORRECTED: Display uploaded file information
-                                            // if (uploadedFile != null &&
-                                            //     publicUrl != null)
-                                            //   Row(
-                                            //     children: [
-                                            //       Icon(
-                                            //         _getFileIcon(publicUrl),
-                                            //         size: 16,
-                                            //         color: Colors.grey.shade600,
-                                            //       ),
-                                            //       const SizedBox(width: 6),
-                                            //       Expanded(
-                                            //         child: Text(
-                                            //           uploadedFile['original_name'] ??
-                                            //               _getFileName(publicUrl),
-                                            //           style: TextStyle(
-                                            //             fontSize: 13,
-                                            //             color: Colors.grey.shade600,
-                                            //           ),
-                                            //           overflow: TextOverflow.ellipsis,
-                                            //         ),
-                                            //       ),
-                                            //       if (_loadingPreviewId ==
-                                            //           invoice['id'])
-                                            //         Padding(
-                                            //           padding: const EdgeInsets.only(
-                                            //             left: 8,
-                                            //           ),
-                                            //           child: SizedBox(
-                                            //             width: 16,
-                                            //             height: 16,
-                                            //             child: CircularProgressIndicator(
-                                            //               strokeWidth: 2,
-                                            //               valueColor:
-                                            //                   AlwaysStoppedAnimation(
-                                            //                     Colors.blue[900]!,
-                                            //                   ),
-                                            //             ),
-                                            //           ),
-                                            //         ),
-                                            //     ],
-                                            //   )
-                                            // else
-                                            //   Text(
-                                            //     'No file uploaded',
-                                            //     style: TextStyle(
-                                            //       fontSize: 13,
-                                            //       color: Colors.grey.shade600,
-                                            //     ),
-                                            //   ),
-                                            const SizedBox(height: 10),
-                                            Divider(
-                                              color: Colors.grey.shade200,
-                                              thickness: 1,
-                                              height: 1,
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Row(
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons
-                                                          .calendar_today_outlined,
-                                                      size: 15,
-                                                      color:
-                                                          Colors.grey.shade500,
-                                                    ),
-                                                    const SizedBox(width: 7),
-                                                    Text(
-                                                      _formatDate(
-                                                        invoice['date'] ??
-                                                            'No date found',
-                                                      ),
-                                                      style: TextStyle(
-                                                        fontSize: 13.5,
-                                                        color:
-                                                            Colors
-                                                                .grey
-                                                                .shade700,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const Spacer(),
-                                                Row(
-                                                  children: [
-                                                    if (invoice['ai_status'] ==
-                                                        "AI_FAILED")
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets.only(
-                                                              left: 10,
-                                                            ),
-                                                        child: IconButton(
-                                                          onPressed:
-                                                              _reprocessingIds
-                                                                      .contains(
-                                                                        invoice['id'],
-                                                                      )
-                                                                  ? null
-                                                                  : () async {
-                                                                    final invoiceId =
-                                                                        invoice['id'];
-                                                                    setState(() {
-                                                                      _reprocessingIds
-                                                                          .add(
-                                                                            invoiceId,
-                                                                          );
-                                                                    });
-                                                                    try {
-                                                                      // Extract uploaded file IDs from the invoice data
-                                                                      final uploadedFiles =
-                                                                          invoice['uploaded_files'];
-                                                                      List<
-                                                                        String
-                                                                      >
-                                                                      fileIds =
-                                                                          [];
-                                                                      if (uploadedFiles
-                                                                              is List &&
-                                                                          uploadedFiles
-                                                                              .isNotEmpty) {
-                                                                        fileIds =
-                                                                            uploadedFiles
-                                                                                .map(
-                                                                                  (
-                                                                                    f,
-                                                                                  ) =>
-                                                                                      f['id']?.toString(),
-                                                                                )
-                                                                                .where(
-                                                                                  (
-                                                                                    id,
-                                                                                  ) =>
-                                                                                      id !=
-                                                                                      null,
-                                                                                )
-                                                                                .cast<
-                                                                                  String
-                                                                                >()
-                                                                                .toList();
-                                                                      }
-                                                                      print(
-                                                                        '🔄 Reprocessing invoice $invoiceId with file IDs: $fileIds',
-                                                                      );
-                                                                      final result = await InvoiceListService().reprocessInvoice(
-                                                                        id:
-                                                                            invoiceId,
-                                                                        uploadedFileIds:
-                                                                            fileIds.isNotEmpty
-                                                                                ? fileIds
-                                                                                : null,
-                                                                      );
-                                                                      print(
-                                                                        '✅ Reprocess result: $result',
-                                                                      );
-                                                                      if (mounted) {
-                                                                        setState(() {
-                                                                          final invoiceIndex = _invoices.indexWhere(
-                                                                            (
-                                                                              inv,
-                                                                            ) =>
-                                                                                inv['id'] ==
-                                                                                invoiceId,
-                                                                          );
-                                                                          if (invoiceIndex !=
-                                                                              -1) {
-                                                                            _invoices[invoiceIndex]['ai_status'] =
-                                                                                'AI_PROCESSING';
-                                                                          }
-                                                                        });
-                                                                        ScaffoldMessenger.of(
-                                                                          context,
-                                                                        ).showSnackBar(
-                                                                          SnackBar(
-                                                                            content: const Text(
-                                                                              'Invoice reprocessing started successfully',
-                                                                            ),
-                                                                            backgroundColor:
-                                                                                Colors.green.shade400,
-                                                                            behavior:
-                                                                                SnackBarBehavior.floating,
-                                                                            shape: RoundedRectangleBorder(
-                                                                              borderRadius: BorderRadius.circular(
-                                                                                12,
-                                                                              ),
-                                                                            ),
-                                                                          ),
+                                                  child: IconButton(
+                                                    onPressed:
+                                                        _reprocessingIds
+                                                                .contains(
+                                                                  invoice['id'],
+                                                                )
+                                                            ? null
+                                                            : () async {
+                                                              final invoiceId =
+                                                                  invoice['id'];
+                                                              setState(() {
+                                                                _reprocessingIds
+                                                                    .add(
+                                                                      invoiceId,
+                                                                    );
+                                                              });
+                                                              try {
+                                                                // Extract uploaded file IDs from the invoice data
+                                                                final uploadedFiles =
+                                                                    invoice['uploaded_files'];
+                                                                List<String> fileIds = [];
+                                                                if (uploadedFiles is List &&
+                                                                    uploadedFiles.isNotEmpty) {
+                                                                  fileIds = uploadedFiles
+                                                                      .map((f) =>
+                                                                          f['id']?.toString())
+                                                                      .where((id) => id != null)
+                                                                      .cast<String>()
+                                                                      .toList();
+                                                                }
+                                                                print(
+                                                                  '🔄 Reprocessing invoice $invoiceId with file IDs: $fileIds',
+                                                                );
+                                                                final result = await InvoiceListService()
+                                                                    .reprocessInvoice(
+                                                                      id: invoiceId,
+                                                                      uploadedFileIds:
+                                                                          fileIds.isNotEmpty
+                                                                              ? fileIds
+                                                                              : null,
+                                                                    );
+                                                                print('✅ Reprocess result: $result');
+                                                                if (mounted) {
+                                                                  setState(() {
+                                                                    final invoiceIndex =
+                                                                        _invoices.indexWhere(
+                                                                          (
+                                                                            inv,
+                                                                          ) =>
+                                                                              inv['id'] ==
+                                                                              invoiceId,
                                                                         );
-                                                                      }
-                                                                    } catch (
-                                                                      e
-                                                                    ) {
-                                                                      print(
-                                                                        '❌ AI Reprocess Error: $e',
-                                                                      );
-                                                                      if (mounted) {
-                                                                        ScaffoldMessenger.of(
-                                                                          context,
-                                                                        ).showSnackBar(
-                                                                          SnackBar(
-                                                                            content: Text(
-                                                                              'AI Processing Failed: ${e.toString().replaceAll('Exception: ', '')}',
-                                                                            ),
-                                                                            backgroundColor:
-                                                                                Colors.red.shade400,
-                                                                            behavior:
-                                                                                SnackBarBehavior.floating,
-                                                                            shape: RoundedRectangleBorder(
-                                                                              borderRadius: BorderRadius.circular(
-                                                                                12,
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        );
-                                                                      }
-                                                                    } finally {
-                                                                      if (mounted) {
-                                                                        setState(() {
-                                                                          _reprocessingIds.remove(
-                                                                            invoiceId,
-                                                                          );
-                                                                        });
-                                                                      }
+                                                                    if (invoiceIndex !=
+                                                                        -1) {
+                                                                      _invoices[invoiceIndex]['ai_status'] =
+                                                                          'AI_PROCESSING';
                                                                     }
-                                                                  },
-                                                          icon:
-                                                              _reprocessingIds
-                                                                      .contains(
-                                                                        invoice['id'],
-                                                                      )
-                                                                  ? SizedBox(
-                                                                    width: 24,
-                                                                    height: 24,
-                                                                    child: CircularProgressIndicator(
-                                                                      strokeWidth:
-                                                                          2,
-                                                                      valueColor:
-                                                                          AlwaysStoppedAnimation(
-                                                                            Colors.blue[900]!,
+                                                                  });
+                                                                  ScaffoldMessenger.of(
+                                                                    context,
+                                                                  ).showSnackBar(
+                                                                    SnackBar(
+                                                                      content:
+                                                                          const Text(
+                                                                            'Invoice reprocessing started successfully',
                                                                           ),
+                                                                      backgroundColor:
+                                                                          Colors
+                                                                              .green
+                                                                              .shade400,
+                                                                      behavior:
+                                                                          SnackBarBehavior
+                                                                              .floating,
+                                                                      shape: RoundedRectangleBorder(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              12,
+                                                                            ),
+                                                                      ),
                                                                     ),
-                                                                  )
-                                                                  : Icon(
-                                                                    CupertinoIcons
-                                                                        .arrow_clockwise,
-                                                                    color:
-                                                                        Colors
-                                                                            .blue[900],
-                                                                  ),
-                                                        ),
-                                                      ),
-                                                    _getStatusChip(
-                                                      invoice['ai_status'],
-                                                    ),
-                                                  ],
+                                                                  );
+                                                                }
+                                                              } catch (e) {
+                                                                print(
+                                                                  '❌ AI Reprocess Error: $e',
+                                                                );
+                                                                if (mounted) {
+                                                                  ScaffoldMessenger.of(
+                                                                    context,
+                                                                  ).showSnackBar(
+                                                                    SnackBar(
+                                                                      content: Text(
+                                                                        'AI Processing Failed: ${e.toString().replaceAll('Exception: ', '')}',
+                                                                      ),
+                                                                      backgroundColor:
+                                                                          Colors
+                                                                              .red
+                                                                              .shade400,
+                                                                      behavior:
+                                                                          SnackBarBehavior
+                                                                              .floating,
+                                                                      shape: RoundedRectangleBorder(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(
+                                                                              12,
+                                                                            ),
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              } finally {
+                                                                if (mounted) {
+                                                                  setState(() {
+                                                                    _reprocessingIds
+                                                                        .remove(
+                                                                          invoiceId,
+                                                                        );
+                                                                  });
+                                                                }
+                                                              }
+                                                            },
+                                                    icon:
+                                                        _reprocessingIds
+                                                                .contains(
+                                                                  invoice['id'],
+                                                                )
+                                                            ? SizedBox(
+                                                              width: 24,
+                                                              height: 24,
+                                                              child: CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                                valueColor:
+                                                                    AlwaysStoppedAnimation(
+                                                                      Colors
+                                                                          .blue[900]!,
+                                                                    ),
+                                                              ),
+                                                            )
+                                                            : Icon(
+                                                              CupertinoIcons
+                                                                  .arrow_clockwise,
+                                                              color:
+                                                                  Colors
+                                                                      .blue[900],
+                                                            ),
+                                                  ),
                                                 ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                                              _getStatusChip(
+                                                invoice['ai_status'],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -3744,95 +3326,64 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
         ],
       ),
       floatingActionButton: Container(
-        width: 88,
-        height: 88,
-        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: const Color(0xFF192155).withOpacity(0.12),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF2A3577), Color(0xFF141B44)],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF192155).withOpacity(0.4),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () async {
-                final deviceInfo = await DeviceInfoPlugin().androidInfo;
-                final androidVersion = deviceInfo.version.sdkInt;
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final deviceInfo = await DeviceInfoPlugin().androidInfo;
+            final androidVersion = deviceInfo.version.sdkInt;
 
-                var cameraStatus = await Permission.camera.status;
-                bool storageStatus;
+            var cameraStatus = await Permission.camera.status;
+            bool storageStatus;
 
-                if (androidVersion >= 33) {
-                  // Check photos permission for Android 13+
-                  storageStatus = await Permission.photos.status.then(
-                    (status) => status.isGranted,
-                  );
-                } else {
-                  // Check traditional storage permission for Android 12-
-                  storageStatus = await Permission.storage.status.then(
-                    (status) => status.isGranted,
-                  );
-                }
+            if (androidVersion >= 33) {
+              // Check photos permission for Android 13+
+              storageStatus = await Permission.photos.status.then(
+                (status) => status.isGranted,
+              );
+            } else {
+              // Check traditional storage permission for Android 12-
+              storageStatus = await Permission.storage.status.then(
+                (status) => status.isGranted,
+              );
+            }
 
-                print("The camera status: $cameraStatus");
-                print(
-                  "The storage status: ${storageStatus ? 'granted' : 'denied'}",
-                );
+            print("The camera status: $cameraStatus");
+            print(
+              "The storage status: ${storageStatus ? 'granted' : 'denied'}",
+            );
 
-                if (!cameraStatus.isGranted || !storageStatus) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Please grant camera and storage permissions to add photos or documents.',
-                      ),
-                      backgroundColor: Colors.red.shade400,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                  return;
-                }
-                _showUploadOptions(context);
-              },
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.file_upload_outlined,
-                    color: Colors.white,
-                    size: 26,
+            if (!cameraStatus.isGranted || !storageStatus) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Please grant camera and storage permissions to add photos or documents.',
                   ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Upload',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  backgroundColor: Colors.red.shade400,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+              return;
+            }
+            _showUploadOptions(context);
+          },
+          backgroundColor: Color(0xFF192155),
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.upload_rounded, size: 20),
+          label: const Text('Upload', style: TextStyle(fontSize: 14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
