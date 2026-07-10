@@ -7,12 +7,14 @@ import 'package:open_file/open_file.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:syncfusion_flutter_core/theme.dart';
 import '../service/listservice.dart';
 import 'package:dotted_border/dotted_border.dart';
 import '../service/mainapi.dart';
 import '../model/InoviceConfirmModel.dart';
 import 'ai_processing.dart';
 import 'send_otp.dart';
+import '../widgets/app_animations.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:mime/mime.dart';
@@ -296,7 +298,7 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => SendOtpScreen()),
+      smoothPageRoute(SendOtpScreen()),
       (route) => false,
     );
   }
@@ -1235,21 +1237,16 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                             children: [
                               Expanded(
                               child: OutlinedButton(
-                                onPressed: () async {
-                                  final uploadedFileIds =
-                                      confirmResponse.uploadedFiles
-                                          .map((f) => f.id)
-                                          .toList();
-                                  if (uploadedFileIds.isNotEmpty) {
-                                    await api.cancelUpload(uploadedFileIds);
+                                onPressed: () {
+                                  // Keyboard band karo aur dialog TURANT pop
+                                  // karo. Yahan koi await/delay mat rakho —
+                                  // warna button laggy feel hota hai. Asli
+                                  // freeze ki wajah controller dispose thi
+                                  // (upar fix ki gayi hai), keyboard race nahi.
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                  if (Navigator.canPop(context)) {
+                                    Navigator.pop(context, false);
                                   }
-                                  Navigator.pop(context, false);
-                                  await _fetchInvoices();
-                                  setState(() {
-                                    _selectedFile = null;
-                                    _selectedImages.clear();
-                                    _isPhotoTaken = false;
-                                  });
                                 },
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: const Color(0xFF6B7280),
@@ -1280,6 +1277,10 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                 onPressed: () async {
                                   if (!_formKey.currentState!.validate())
                                     return;
+
+                                  // Keyboard band karo (dialog resize nahi hota
+                                  // kyunki resizeToAvoidBottomInset: false hai)
+                                  FocusManager.instance.primaryFocus?.unfocus();
 
                                   try {
                                     final uploadedFileIds =
@@ -1366,7 +1367,13 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                       right: 14,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(20),
-                        onTap: () => Navigator.pop(context),
+                        onTap: () {
+                          // Keyboard band karo aur dialog turant pop karo
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                        },
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
@@ -1390,10 +1397,25 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
         },
       );
 
-      invoiceNumberController.dispose();
-      companyNameController.dispose();
-      invoiceDateController.dispose();
-      amountController.dispose();
+      // Controllers ko dialog ki exit-animation POORI hone ke BAAD dispose
+      // karo. addPostFrameCallback agle hi frame (~16ms) pe chal jaata hai
+      // jabki pop/exit animation ~250ms leti hai. Is beech agar user ne kisi
+      // field me kuchh TYPE kiya hai to TextField abhi bhi in controllers ko
+      // paint ke dauraan padhta rehta hai — disposed controller padhne par
+      // har frame exception aati hai aur UI thread block hokar app FREEZE
+      // (ANR / signal 3 tombstone) ho jaati hai. Isliye safe delay + try/catch.
+      Future.delayed(const Duration(milliseconds: 800), () {
+        try {
+          invoiceNumberController.dispose();
+          companyNameController.dispose();
+          invoiceDateController.dispose();
+          amountController.dispose();
+          invoicedToController.dispose();
+          remarkController.dispose();
+        } catch (e) {
+          print('Controller dispose error (ignored): $e');
+        }
+      });
 
       print('Review dialog dismissed');
 
@@ -1408,31 +1430,84 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
             ),
           ),
         );
-      } else if (isCommitted == null) {
-        // Dialog dismissed without button press, treat as cancel
-        try {
-          for (var file in confirmResponse.uploadedFiles) {
-            await api.cancelUpload([file.id]);
+      } else if (isCommitted == false) {
+        // Cancel button se band hui — pop animation khatam hone do pehle,
+        // phir cleanup karo taaki multiple setState ek saath na aayein
+        unawaited(() async {
+          await Future.delayed(const Duration(milliseconds: 350));
+          try {
+            final uploadedFileIds =
+                confirmResponse.uploadedFiles.map((f) => f.id).toList();
+            if (uploadedFileIds.isNotEmpty) {
+              await api.cancelUpload(uploadedFileIds).timeout(
+                const Duration(seconds: 15),
+                onTimeout: () {
+                  throw TimeoutException('cancelUpload timed out');
+                },
+              );
+            }
+          } catch (e) {
+            print('Failed to cancel upload: $e');
           }
-          ScaffoldMessenger.of(parentContext).showSnackBar(
-            SnackBar(
-              content: const Text('Upload cancelled'),
-              backgroundColor: Colors.orange.shade400,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        } catch (e) {
-          print('Failed to cancel upload: $e');
-        }
-        await _fetchInvoices();
-        setState(() {
-          _selectedFile = null;
-          _selectedImages.clear();
-          _isPhotoTaken = false;
-        });
+          try {
+            await _fetchInvoices();
+          } catch (e) {
+            print('Failed to refresh invoices after cancel: $e');
+          }
+          if (mounted) {
+            setState(() {
+              _selectedFile = null;
+              _selectedImages.clear();
+              _isPhotoTaken = false;
+            });
+          }
+        }());
+      } else if (isCommitted == null) {
+        // Dialog X se band hui (dialog khud already gone hai yahan) —
+        // baaki cleanup background mein karo taaki FAB/upload spinner
+        // lambe time tak stuck na rahe agar cancelUpload slow/hang ho
+        unawaited(() async {
+          // Pop animation khatam hone do pehle
+          await Future.delayed(const Duration(milliseconds: 350));
+          try {
+            final uploadedFileIds =
+                confirmResponse.uploadedFiles.map((f) => f.id).toList();
+            if (uploadedFileIds.isNotEmpty) {
+              await api.cancelUpload(uploadedFileIds).timeout(
+                const Duration(seconds: 15),
+                onTimeout: () {
+                  throw TimeoutException('cancelUpload timed out');
+                },
+              );
+            }
+            if (mounted) {
+              ScaffoldMessenger.of(parentContext).showSnackBar(
+                SnackBar(
+                  content: const Text('Upload cancelled'),
+                  backgroundColor: Colors.orange.shade400,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            }
+          } catch (e) {
+            print('Failed to cancel upload: $e');
+          }
+          try {
+            await _fetchInvoices();
+          } catch (e) {
+            print('Failed to refresh invoices after cancel: $e');
+          }
+          if (mounted) {
+            setState(() {
+              _selectedFile = null;
+              _selectedImages.clear();
+              _isPhotoTaken = false;
+            });
+          }
+        }());
       }
       // CHANGE END
     } catch (e) {
@@ -1459,10 +1534,14 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isUploading = false);
-      }
-      print('Finished _uploadSelectedFiles');
+      // Pop animation khatam hone do — phir setState karo warna
+      // dialog close animation ke saath rebuild race kar sakta hai
+      Future.delayed(const Duration(milliseconds: 350), () {
+        if (mounted) {
+          setState(() => _isUploading = false);
+        }
+        print('Finished _uploadSelectedFiles');
+      });
     }
   }
 
@@ -3274,8 +3353,8 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
   Future<void> _openInvoicesPreview(List<String> urls) async {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) {
+      smoothPageRouteBuilder(
+        (context) {
           final imageUrls =
               urls
                   .where((url) {
@@ -3557,8 +3636,8 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => _buildFileViewerScaffold(
+                                smoothPageRouteBuilder(
+                                  (context) => _buildFileViewerScaffold(
                                     title: 'Invoice Preview',
                                     subtitle: fileFileName,
                                     body: _buildInvoiceContent(fileUrl, ext),
@@ -3881,14 +3960,19 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                   child: CircularProgressIndicator(color: Color(0xFF192155)),
                 );
               }
-              return SfPdfViewer.network(
-                completeUrl,
-                enableDoubleTapZooming: true,
-                enableDocumentLinkAnnotation: false,
-                headers:
-                    snapshot.data != null
-                        ? {'Authorization': 'Bearer ${snapshot.data}'}
-                        : {},
+              return SfPdfViewerTheme(
+                data: const SfPdfViewerThemeData(
+                  backgroundColor: Colors.white,
+                ),
+                child: SfPdfViewer.network(
+                  completeUrl,
+                  enableDoubleTapZooming: true,
+                  enableDocumentLinkAnnotation: false,
+                  headers:
+                      snapshot.data != null
+                          ? {'Authorization': 'Bearer ${snapshot.data}'}
+                          : {},
+                ),
               );
             },
           ),
@@ -4265,9 +4349,14 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                 ),
               ),
               Expanded(
-                child:
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 350),
+                  switchInCurve: Curves.easeOut,
+                  switchOutCurve: Curves.easeIn,
+                  child:
                     _isLoading
                         ? const Center(
+                          key: ValueKey('inv_loading'),
                           child: CircularProgressIndicator(
                             valueColor: AlwaysStoppedAnimation<Color>(
                               Color(0xFF1E88E5),
@@ -4275,7 +4364,9 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                           ),
                         )
                         : _invoices.isEmpty
-                        ? Center(
+                        ? FadeSlideIn(
+                          key: const ValueKey('inv_empty'),
+                          child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -4303,8 +4394,10 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                               ),
                             ],
                           ),
+                          ),
                         )
                         : ListView.builder(
+                          key: const ValueKey('inv_list'),
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
                           itemCount:
@@ -4337,7 +4430,11 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                     .where((url) => url != null)
                                     .toList();
 
-                            return InkWell(
+                            return FadeSlideIn(
+                              delay: Duration(
+                                milliseconds: 45 * (index % 12),
+                              ),
+                              child: InkWell(
                               onTap: () async {
                                 if (_loadingPreviewId != null) return;
                                 if (publicUrls.isEmpty) {
@@ -4841,9 +4938,10 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                   ),
                                 ),
                               ),
-                            );
+                            ));
                           },
                         ),
+                ),
               ),
             ],
           ),

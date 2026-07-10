@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:invoice_management/screens/homescreen.dart';
 import 'package:invoice_management/screens/send_otp.dart';
+import 'package:invoice_management/widgets/app_animations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -20,13 +21,34 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'VRV Invoice Management',
       theme: ThemeData(
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        // Seed color same rakha hai taaki buttons/accents ka color na badle.
+        // Bas white surfaces ko pure white par force kiya hai aur elevation ka
+        // surfaceTint (jo Material 3 me pinkish overlay daalta hai) hataya hai,
+        // taaki kahin bhi background pink na dikhe.
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        canvasColor: Colors.white,
+        cardColor: Colors.white,
+        dialogBackgroundColor: Colors.white,
+        dialogTheme: const DialogThemeData(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
+        bottomSheetTheme: const BottomSheetThemeData(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
+        popupMenuTheme: const PopupMenuThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+        ),
       ),
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
@@ -122,7 +144,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (authStatus == 'authorized') {
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => InvoiceManagementScreen()),
+          smoothPageRoute(InvoiceManagementScreen()),
         );
       }
     } else if (authStatus == 'networkError') {
@@ -134,7 +156,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           ),
         );
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => InvoiceManagementScreen()),
+          smoothPageRoute(InvoiceManagementScreen()),
         );
       }
     } else {
@@ -208,7 +230,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     if (mounted) {
       Navigator.of(
         context,
-      ).pushReplacement(MaterialPageRoute(builder: (context) => SendOtpScreen()));
+      ).pushReplacement(smoothPageRoute(SendOtpScreen()));
     }
   }
 

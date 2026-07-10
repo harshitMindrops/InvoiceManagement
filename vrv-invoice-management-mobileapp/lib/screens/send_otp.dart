@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../service/authservice.dart';
+import '../widgets/app_animations.dart';
 import 'verify_otp_screen.dart';
 
 class SendOtpScreen extends StatefulWidget {
@@ -52,9 +53,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
 
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => VerifyOtpScreen(phoneNumber: phoneNumber),
-            ),
+            smoothPageRoute(VerifyOtpScreen(phoneNumber: phoneNumber)),
           );
         } else {
           setState(() {
@@ -91,7 +90,9 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Header
-                Container(
+                FadeSlideIn(
+                  beginOffset: const Offset(0, -0.05),
+                  child: Container(
                   padding: EdgeInsets.fromLTRB(
                     24,
                     MediaQuery.of(context).padding.top + 24,
@@ -156,9 +157,12 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                     ],
                   ),
                 ),
+                ),
 
                 // Card with phone input
-                Padding(
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 120),
+                  child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(20, 26, 20, 24),
@@ -421,6 +425,7 @@ class _SendOtpScreenState extends State<SendOtpScreen> {
                       ],
                     ),
                   ),
+                ),
                 ),
               ],
             ),

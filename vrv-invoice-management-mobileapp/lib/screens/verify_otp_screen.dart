@@ -8,6 +8,7 @@ import 'package:invoice_management/screens/send_otp.dart';
 import 'package:pinput/pinput.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../service/authservice.dart';
+import '../widgets/app_animations.dart';
 import 'homescreen.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
@@ -202,7 +203,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
           print("Navigating to InvoiceManagementScreen");
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => InvoiceManagementScreen()),
+            smoothPageRoute(InvoiceManagementScreen()),
             (route) => false, // Removes all previous routes
           );
           return true;
@@ -320,7 +321,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Header
-                Container(
+                FadeSlideIn(
+                  beginOffset: const Offset(0, -0.05),
+                  child: Container(
                   padding: EdgeInsets.fromLTRB(
                     24,
                     MediaQuery.of(context).padding.top + 18,
@@ -362,9 +365,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                               onPressed: () {
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SendOtpScreen(),
-                                  ),
+                                  smoothPageRoute(SendOtpScreen()),
                                 );
                               },
                             ),
@@ -425,9 +426,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                     ],
                   ),
                 ),
+                ),
 
                 // Card with OTP form
-                Padding(
+                FadeSlideIn(
+                  delay: const Duration(milliseconds: 120),
+                  child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(20, 26, 20, 24),
@@ -552,9 +556,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                               onTap: () {
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SendOtpScreen(),
-                                  ),
+                                  smoothPageRoute(SendOtpScreen()),
                                 );
                               },
                               child: Row(
@@ -662,6 +664,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                       ],
                     ),
                   ),
+                ),
                 ),
               ],
             ),
