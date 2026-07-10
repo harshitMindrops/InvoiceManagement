@@ -217,168 +217,203 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Decorative soft glow blobs for depth (subtle, light theme)
-          Positioned(
-            top: -size.width * 0.35,
-            right: -size.width * 0.3,
-            child: Container(
-              width: size.width * 0.85,
-              height: size.width * 0.85,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF7C5CFA).withOpacity(0.08),
-                    const Color(0xFF7C5CFA).withOpacity(0.0),
-                  ],
+      backgroundColor: const Color(0xFF141B44),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1B2456), Color(0xFF141B44), Color(0xFF0F1533)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Decorative soft glow blobs for depth
+            Positioned(
+              top: -size.width * 0.35,
+              right: -size.width * 0.3,
+              child: Container(
+                width: size.width * 0.85,
+                height: size.width * 0.85,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF7C5CFA).withOpacity(0.20),
+                      const Color(0xFF7C5CFA).withOpacity(0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: -size.width * 0.4,
-            left: -size.width * 0.35,
-            child: Container(
-              width: size.width * 0.9,
-              height: size.width * 0.9,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF3CBD6B).withOpacity(0.07),
-                    const Color(0xFF3CBD6B).withOpacity(0.0),
-                  ],
+            Positioned(
+              bottom: -size.width * 0.4,
+              left: -size.width * 0.35,
+              child: Container(
+                width: size.width * 0.9,
+                height: size.width * 0.9,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF3CBD6B).withOpacity(0.14),
+                      const Color(0xFF3CBD6B).withOpacity(0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Main centered content: logo card + title
-          Align(
-            alignment: const Alignment(0.0, -0.22),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FadeTransition(
-                  opacity: _logoFade,
-                  child: ScaleTransition(
-                    scale: _logoScale,
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      margin: const EdgeInsets.only(bottom: 22),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(28),
-                        border: Border.all(color: Colors.grey.shade100),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF192155).withOpacity(0.10),
-                            blurRadius: 30,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 14),
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Image.asset(
-                        'assets/images/img_1.png',
-                        height: 150,
-                        width: 230,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
+            // Faint grid / dot texture accent (subtle, top area)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: size.height * 0.4,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.white.withOpacity(0.03),
+                      Colors.white.withOpacity(0.0),
+                    ],
                   ),
                 ),
-                FadeTransition(
-                  opacity: _textFade,
-                  child: SlideTransition(
-                    position: _textSlide,
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Invoice Management',
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF134CB5),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Smart. Simple. Streamlined.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade500,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
 
-          // Bottom Content: Animated gradient progress bar + status text
-          Positioned(
-            bottom: 70,
-            left: 60,
-            right: 60,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.10),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: _animationController.value.clamp(0.0, 1.0),
+            // Main centered content: logo card + title
+            Align(
+              alignment: const Alignment(0.0, -0.22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FadeTransition(
+                    opacity: _logoFade,
+                    child: ScaleTransition(
+                      scale: _logoScale,
                       child: Container(
+                        padding: const EdgeInsets.all(22),
+                        margin: const EdgeInsets.only(bottom: 22),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF7C5CFA), Color(0xFF192155)],
-                          ),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF192155).withOpacity(0.35),
-                              blurRadius: 8,
+                              color: const Color(0xFF7C5CFA).withOpacity(0.25),
+                              blurRadius: 40,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 18),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
+                        child: Image.asset(
+                          'assets/images/img_1.png',
+                          height: 130,
+                          width: 200,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'Getting things ready...',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade500,
-                    letterSpacing: 0.4,
+                  FadeTransition(
+                    opacity: _textFade,
+                    child: SlideTransition(
+                      position: _textSlide,
+                      child: Column(
+                        children: [
+                          ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Color(0xFFFFFFFF), Color(0xFFC9D2F5)],
+                            ).createShader(bounds),
+                            child: const Text(
+                              'Invoice Management',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                letterSpacing: 0.6,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Smart. Simple. Streamlined.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withOpacity(0.55),
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+
+            // Bottom Content: Animated gradient progress bar + status text
+            Positioned(
+              bottom: 70,
+              left: 60,
+              right: 60,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: _animationController.value.clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF7C5CFA), Color(0xFF3CBD6B)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF7C5CFA).withOpacity(0.5),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Getting things ready...',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.45),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

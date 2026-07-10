@@ -334,13 +334,12 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Color(0xFF2A3577),
-                          Color(0xFF141B44),
+                          Color(0xFF2A3577), Color(0xFF141B44)
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0xFF141B44).withOpacity(0.35),
+                          color: Color(0xFF2A3577).withOpacity(0.35),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -411,14 +410,13 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF2A3577),
-                                  Color(0xFF141B44)
+                                  Color(0xFF2A3577), Color(0xFF141B44)
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(14),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Color(0xFF141B44).withOpacity(0.3),
+                                  color: Color(0xFF2A3577).withOpacity(0.3),
                                   blurRadius: 12,
                                   offset: const Offset(0, 6),
                                 ),
@@ -3307,6 +3305,8 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                 Uri.parse(url).pathSegments.isNotEmpty
                     ? Uri.parse(url).pathSegments.last
                     : url.split('/').last;
+            // Both images and PDFs open the same way: directly inside the
+            // framed preview box, with zoom/pan available right there.
             return _buildFileViewerScaffold(
               title: 'Invoice Preview',
               subtitle: fileName,
@@ -3397,93 +3397,123 @@ class _InvoiceManagementScreenState extends State<InvoiceManagementScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  for (var imgUrl in imageUrls)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF192155).withOpacity(0.08),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF192155).withOpacity(0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < imageUrls.length; i++) ...[
+                          if (i != 0)
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: Colors.grey.shade200,
+                            ),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () =>
+                                  _openFullScreenImage(context, imageUrls[i]),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    constraints: const BoxConstraints(
+                                      minHeight: 220,
+                                    ),
+                                    color: const Color(0xFFF3F4F7),
+                                    child: Image.network(
+                                      imageUrls[i],
+                                      width: double.infinity,
+                                      fit: BoxFit.fitWidth,
+                                      loadingBuilder: (context, child, progress) {
+                                        if (progress == null) return child;
+                                        return Container(
+                                          height: 260,
+                                          alignment: Alignment.center,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.4,
+                                            color: const Color(0xFF192155),
+                                            value: progress.expectedTotalBytes != null
+                                                ? progress.cumulativeBytesLoaded /
+                                                    (progress.expectedTotalBytes ?? 1)
+                                                : null,
+                                          ),
+                                        );
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) => Container(
+                                            height: 260,
+                                            alignment: Alignment.center,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.broken_image_rounded,
+                                                    color: Colors.grey.shade400, size: 32),
+                                                const SizedBox(height: 6),
+                                                Text('Failed to load image',
+                                                    style: TextStyle(
+                                                        color: Colors.grey.shade500,
+                                                        fontSize: 12.5)),
+                                              ],
+                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 10,
+                                    right: 10,
+                                    child: Material(
+                                      color: Colors.black.withOpacity(0.45),
+                                      shape: const CircleBorder(),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.fullscreen_rounded,
+                                            color: Colors.white, size: 20),
+                                        onPressed: () => _openFullScreenImage(
+                                            context, imageUrls[i]),
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 10,
+                                    left: 10,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 9,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withOpacity(0.45),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '${i + 1}/${imageUrls.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(18),
-                        clipBehavior: Clip.antiAlias,
-                        child: InkWell(
-                          onTap: () => _openFullScreenImage(context, imgUrl),
-                          child: Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(18),
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 340,
-                                  color: const Color(0xFFF3F4F7),
-                                  child: Image.network(
-                                    imgUrl,
-                                    width: double.infinity,
-                                    height: 340,
-                                    fit: BoxFit.contain,
-                                    loadingBuilder: (context, child, progress) {
-                                      if (progress == null) return child;
-                                      return Container(
-                                        height: 340,
-                                        alignment: Alignment.center,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                          color: const Color(0xFF192155),
-                                          value: progress.expectedTotalBytes != null
-                                              ? progress.cumulativeBytesLoaded /
-                                                  (progress.expectedTotalBytes ?? 1)
-                                              : null,
-                                        ),
-                                      );
-                                    },
-                                    errorBuilder:
-                                        (context, error, stackTrace) => Container(
-                                          height: 340,
-                                          alignment: Alignment.center,
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.broken_image_rounded,
-                                                  color: Colors.grey.shade400, size: 32),
-                                              const SizedBox(height: 6),
-                                              Text('Failed to load image',
-                                                  style: TextStyle(
-                                                      color: Colors.grey.shade500,
-                                                      fontSize: 12.5)),
-                                            ],
-                                          ),
-                                        ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 10,
-                                right: 10,
-                                child: Material(
-                                  color: Colors.black.withOpacity(0.45),
-                                  shape: const CircleBorder(),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.fullscreen_rounded,
-                                        color: Colors.white, size: 20),
-                                    onPressed: () =>
-                                        _openFullScreenImage(context, imgUrl),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
+                  ),
                   const SizedBox(height: 6),
                 ],
                 if (nonImageUrls.isNotEmpty) ...[
