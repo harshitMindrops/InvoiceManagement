@@ -884,8 +884,11 @@ class _InvoiceManagementScreenState
             bool isImageMode = tempSelectedFile == null;
             bool isUploadEnabled =
                 (tempSelectedFile == null && tempSelectedImages.length < 3) &&
-                !isFromFilePicker &&
                 !isCompressing; // Also check isCompressing
+            // NOTE: isFromFilePicker no longer blocks further additions —
+            // File mode should allow adding up to 3 images just like Photo mode.
+            // A selected document (tempSelectedFile != null) still locks
+            // further additions, since only 1 document is allowed.
 
             return Container(
               decoration: const BoxDecoration(
@@ -1090,9 +1093,9 @@ class _InvoiceManagementScreenState
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              selectedMode == "Photo"
-                                  ? 'Selected Photo'
-                                  : 'Selected Files',
+                              tempSelectedFile != null
+                                  ? 'Selected Files'
+                                  : 'Selected Photo',
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
@@ -1112,9 +1115,9 @@ class _InvoiceManagementScreenState
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                selectedMode == "Photo"
-                                    ? '${tempSelectedImages.length}/3'
-                                    : '${(tempSelectedFile != null ? 1 : 0) + tempSelectedImages.length}/1',
+                                tempSelectedFile != null
+                                    ? '1/1'
+                                    : '${tempSelectedImages.length}/3',
                                 style: const TextStyle(
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w700,
@@ -1590,22 +1593,27 @@ class _InvoiceManagementScreenState
                           Expanded(
                             child: ElevatedButton(
                               onPressed:
-                                  // File mode: single selection only (1 doc or 1 image)
-                                  (selectedMode == "File"
-                                              ? (tempSelectedFile == null &&
-                                                  tempSelectedImages.isEmpty)
-                                              : (tempSelectedImages.length <
-                                                  3)) &&
+                                  // Doc selected => locked (only 1 document allowed).
+                                  // Otherwise (images, in both File and Photo mode)
+                                  // allow adding more until we reach 3.
+                                  (tempSelectedFile == null &&
+                                          tempSelectedImages.length < 3) &&
                                           isUploadEnabled &&
                                           !isCompressing
                                       ? () async {
                                         if (selectedMode == "File") {
-                                          // Single selection (never add a second file)
+                                          // Up to 3 images can be added, or exactly 1 document.
                                           try {
+                                            // Allow multiple images to be picked at once when
+                                            // no document is currently selected. If a document
+                                            // is already selected, only a single pick is allowed
+                                            // (since only 1 document can be uploaded).
                                             FilePickerResult? result =
                                                 await FilePicker.platform
                                                     .pickFiles(
-                                                      allowMultiple: false,
+                                                      allowMultiple:
+                                                          tempSelectedFile ==
+                                                              null,
                                                       type: FileType.custom,
                                                       allowedExtensions: [
                                                         'jpg',
@@ -1707,8 +1715,7 @@ class _InvoiceManagementScreenState
                                                 );
                                                 return;
                                               }
-                                              modalSetState(() {
-                                                tempSelectedImages.addAll(
+                                              final newImageFiles =
                                                   newFiles
                                                       .where(
                                                         (f) => [
@@ -1722,23 +1729,52 @@ class _InvoiceManagementScreenState
                                                               .toLowerCase(),
                                                         ),
                                                       )
-                                                      .toList(),
-                                                );
-                                                final docFiles =
-                                                    newFiles
-                                                        .where(
-                                                          (f) => [
-                                                            'pdf',
-                                                            'doc',
-                                                            'docx',
-                                                          ].contains(
-                                                            f.path
-                                                                .split('.')
-                                                                .last
-                                                                .toLowerCase(),
+                                                      .toList();
+                                              final docFiles =
+                                                  newFiles
+                                                      .where(
+                                                        (f) => [
+                                                          'pdf',
+                                                          'doc',
+                                                          'docx',
+                                                        ].contains(
+                                                          f.path
+                                                              .split('.')
+                                                              .last
+                                                              .toLowerCase(),
+                                                        ),
+                                                      )
+                                                      .toList();
+                                              // Don't allow mixing a document with images —
+                                              // either 1 doc OR up to 3 images, never both.
+                                              if (docFiles.isNotEmpty &&
+                                                  (newImageFiles.isNotEmpty ||
+                                                      tempSelectedImages
+                                                          .isNotEmpty)) {
+                                                ScaffoldMessenger.of(
+                                                  parentContext,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: const Text(
+                                                      'Cannot upload both a document and images together.',
+                                                    ),
+                                                    behavior:
+                                                        SnackBarBehavior
+                                                            .floating,
+                                                    shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
                                                           ),
-                                                        )
-                                                        .toList();
+                                                    ),
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              modalSetState(() {
+                                                tempSelectedImages.addAll(
+                                                  newImageFiles,
+                                                );
                                                 if (docFiles.isNotEmpty) {
                                                   tempSelectedFile =
                                                       docFiles.first;
