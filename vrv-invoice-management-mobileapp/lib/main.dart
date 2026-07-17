@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:invoice_management/screens/homescreen.dart';
 import 'package:invoice_management/screens/send_otp.dart';
@@ -9,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -63,7 +64,8 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _logoFade;
   late Animation<double> _logoScale;
@@ -79,8 +81,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       vsync: this,
       duration: const Duration(seconds: 3),
     )..addListener(() {
-        setState(() {}); // UI ko update karne ke liye
-      });
+      setState(() {}); // UI ko update karne ke liye
+    });
 
     // Entrance animations derived from the same controller/timeline
     _logoFade = CurvedAnimation(
@@ -122,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _animationController.dispose(); 
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -143,9 +145,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     if (authStatus == 'authorized') {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          smoothPageRoute(InvoiceManagementScreen()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(smoothPageRoute(InvoiceManagementScreen()));
       }
     } else if (authStatus == 'networkError') {
       if (mounted) {
@@ -155,9 +157,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             duration: Duration(seconds: 3),
           ),
         );
-        Navigator.of(context).pushReplacement(
-          smoothPageRoute(InvoiceManagementScreen()),
-        );
+        Navigator.of(
+          context,
+        ).pushReplacement(smoothPageRoute(InvoiceManagementScreen()));
       }
     } else {
       _logoutUser();
@@ -168,10 +170,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      final response = await http.get(
-        Uri.parse('https://invoice-staging-api.mindrops.com/api/v1/user/validate'),
-        headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://invoice-staging-api.mindrops.com/api/v1/user/validate',
+            ),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
@@ -228,9 +234,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear(); // Clear stored data
     if (mounted) {
-      Navigator.of(
-        context,
-      ).pushReplacement(smoothPageRoute(SendOtpScreen()));
+      Navigator.of(context).pushReplacement(smoothPageRoute(SendOtpScreen()));
     }
   }
 
@@ -354,9 +358,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       child: Column(
                         children: [
                           ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFFFFFFFF), Color(0xFFC9D2F5)],
-                            ).createShader(bounds),
+                            shaderCallback:
+                                (bounds) => const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFFFFF),
+                                    Color(0xFFC9D2F5),
+                                  ],
+                                ).createShader(bounds),
                             child: const Text(
                               'Invoice Management',
                               style: TextStyle(
@@ -439,5 +447,4 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       ),
     );
   }
-
 }

@@ -5,14 +5,14 @@ import 'dart:math' as math;
 /// Light theme, inspired by the reference design but adapted to a
 /// bright UI. Drop this widget into your existing route/screen —
 /// no navigation, auth, or login logic is touched here.
-class InvoiceCard extends StatefulWidget {
-  const InvoiceCard({super.key});
+class AiProcessingScreen extends StatefulWidget {
+  const AiProcessingScreen({super.key});
 
   @override
-  State<InvoiceCard> createState() => _InvoiceCardState();
+  State<AiProcessingScreen> createState() => _AiProcessingScreenState();
 }
 
-class _InvoiceCardState extends State<InvoiceCard>
+class _AiProcessingScreenState extends State<AiProcessingScreen>
     with TickerProviderStateMixin {
   // Continuous ambient motion (float, scan line, pulse dot)
   late final AnimationController _loopController;
